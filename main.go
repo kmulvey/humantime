@@ -116,20 +116,13 @@ func Parse(input string) error {
 	return nil
 }
 
-/*
-func LintSince(inputArr []string) (bool, error) {
-	if len(inputArr) < 2 {
-		return false, errors.New("since must have at least one field after it")
-	}
-}
-*/
-
 // Since takes a string starting with the word since
 // and parses the remainder as time.Duration
-// since yesterday
 // since 3/15/2022
+// since May 8, 2009 5:57:51 PM
+// since yesterday
 // since yesterday at 4pm
-func Since(input string) (time.Duration, error) {
+func (st *String2Time) Since(input string) (time.Duration, error) {
 	var inputArr = strings.Fields(input)
 	if len(inputArr) < 2 {
 		return 0, errors.New("input must have two fields")
@@ -139,11 +132,25 @@ func Since(input string) (time.Duration, error) {
 	}
 
 	var date time.Time
+	var err error
+
+	// is the whole thing a date?
+	if date, err = dateparse.ParseAny(input); err == nil {
+		return time.Since(date), nil
+	}
+
 	var nextEleIsTime bool
 	for i := 1; i < len(inputArr); i++ {
-		if syn, found := TimeSynonyms[inputArr[i]]; found {
+		if nextEleIsTime {
+			var parsed, err = st.parseTimeOrDateString(inputArr[i])
+			if err != nil {
+				return 0, err
+			}
+			return time.Since(parsed), nil
+		} else if syn, found := TimeSynonyms[inputArr[i]]; found {
 			date = syn()
-		} else if inputArr[i] == "am" || inputArr[i] == "pm" {
+		} else if inputArr[i] == "at" {
+			nextEleIsTime = true
 		}
 	}
 
