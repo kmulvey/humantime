@@ -163,7 +163,7 @@ func (st *String2Time) parseTimeOrDateString(input string) (time.Time, error) {
 		var hourString = strings.ReplaceAll(input, "am", "")
 		var hourNum, err = strconv.Atoi(hourString)
 		if err != nil {
-			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", hourString, err)
+			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
 		}
 
 		return time.Date(0, 0, 0, hourNum, 0, 0, 0, st.Location), nil
@@ -171,18 +171,80 @@ func (st *String2Time) parseTimeOrDateString(input string) (time.Time, error) {
 		var hourString = strings.ReplaceAll(input, "pm", "")
 		var hourNum, err = strconv.Atoi(hourString)
 		if err != nil {
-			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", hourString, err)
+			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
 		}
 
 		return time.Date(0, 0, 0, hourNum, 0, 0, 0, st.Location), nil
-	} else if DateSlashRegex.MatchString(input) {
-		var hourString = strings.ReplaceAll(input, "pm", "")
-		var hourNum, err = strconv.Atoi(hourString)
+	} else if ExactTimeRegex.MatchString(input) {
+		var timeArr = strings.Split(input, ":")
+
+		var err error
+		var hour int
+		var minute int
+		var second int
+		hour, err = strconv.Atoi(strings.ReplaceAll(timeArr[0], ":", ""))
 		if err != nil {
-			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", hourString, err)
+			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
 		}
-
-		return time.Date(0, 0, 0, hourNum, 0, 0, 0, st.Location), nil
+		minute, err = strconv.Atoi(strings.ReplaceAll(timeArr[1], ":", ""))
+		if err != nil {
+			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+		}
+		if len(timeArr) == 3 {
+			hour, err = strconv.Atoi(strings.ReplaceAll(timeArr[2], ":", ""))
+			if err != nil {
+				return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+			}
+		}
+		return time.Date(0, 0, 0, hour, minute, second, 0, st.Location), nil
+	} else if DateDashRegex.MatchString(input) {
+		var timeArr = strings.Split(input, "-")
+		// TODO only works for MM/DD/YY for now
+		var err error
+		var day int
+		var month int
+		var year int
+		month, err = strconv.Atoi(strings.ReplaceAll(timeArr[0], "-", ""))
+		if err != nil {
+			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+		}
+		day, err = strconv.Atoi(strings.ReplaceAll(timeArr[1], "-", ""))
+		if err != nil {
+			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+		}
+		if len(timeArr) == 3 {
+			year, err = strconv.Atoi(strings.ReplaceAll(timeArr[2], "-", ""))
+			if err != nil {
+				return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+			}
+		} else {
+			year = time.Now().Year()
+		}
+		return time.Date(year, time.Month(month), day, 0, 0, 0, 0, st.Location), nil
+	} else if DateSlashRegex.MatchString(input) {
+		var timeArr = strings.Split(input, "/")
+		// TODO only works for MM/DD/YY for now
+		var err error
+		var day int
+		var month int
+		var year int
+		month, err = strconv.Atoi(strings.ReplaceAll(timeArr[0], "/", ""))
+		if err != nil {
+			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+		}
+		day, err = strconv.Atoi(strings.ReplaceAll(timeArr[1], "/", ""))
+		if err != nil {
+			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+		}
+		if len(timeArr) == 3 {
+			year, err = strconv.Atoi(strings.ReplaceAll(timeArr[2], "/", ""))
+			if err != nil {
+				return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+			}
+		} else {
+			year = time.Now().Year()
+		}
+		return time.Date(year, time.Month(month), day, 0, 0, 0, 0, st.Location), nil
 	}
 
 	return time.Time{}, errors.New("unable to parse date: " + input)
