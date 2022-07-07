@@ -111,14 +111,17 @@ func NewString2Time(loc *time.Location) (*String2Time, error) {
 	return st, nil
 }
 
-func Parse(input string) error {
+func (st *String2Time) Parse(input string) (*TimeRange, error) {
 	var inputArr = strings.Fields(input)
 	if len(inputArr) < 2 {
-		return errors.New("input must have two fields")
+		return nil, errors.New("input must have at least two fields")
 	}
-	fmt.Println(inputArr)
 
-	return nil
+	if strings.HasPrefix(input, "since") {
+		return st.Since(input)
+	}
+
+	return nil, nil
 }
 
 // Since takes a string starting with the word since
