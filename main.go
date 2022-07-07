@@ -20,6 +20,11 @@ type String2Time struct {
 	*time.Location
 }
 
+type TimeRange struct {
+	From time.Time
+	To   time.Time
+}
+
 const AM = `^\dam`
 const PM = `^\dpm`
 const DateSlash = `\d{1,2}/\d{1,2}/\d{2,4}`
@@ -62,22 +67,26 @@ var DurationWordsPlural = map[string]func(time.Duration) time.Duration{
 	"years":   func(multiplier time.Duration) time.Duration { return multiplier * DurationWords["year"] },
 }
 
-var TimeSynonyms = map[string]func() time.Time{
-	"yesterday": func() time.Time {
+var TimeSynonyms = map[string]func(*time.Location) time.Time{
+	"yesterday": func(loc *time.Location) time.Time {
+		var now = time.Now().Add(time.Hour * -24)
+		var y, m, d = now.Date()
+		return time.Date(y, m, d, 0, 0, 0, 0, loc)
+	},
+	"tomorrow": func(loc *time.Location) time.Time {
 		var now = time.Now().Add(time.Hour * 24)
 		var y, m, d = now.Date()
-		return time.Date(y, m, d, 0, 0, 0, 0, now.Location())
-	},
-	"tomorrow": func() time.Time {
-		var now = time.Now()
-		var y, m, d = now.Date()
-		return time.Date(y, m, d, 0, 0, 0, 0, now.Location())
+		return time.Date(y, m, d, 0, 0, 0, 0, loc)
 	},
 }
 
-func NewString2Time() (*String2Time, error) {
+func NewString2Time(loc *time.Location) (*String2Time, error) {
 
 	var err error
+	var st = new(String2Time)
+	st.Location = loc
+
+	// init regexs
 	AMRegex, err = regexp.Compile(AM)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", AM, err)
@@ -99,11 +108,7 @@ func NewString2Time() (*String2Time, error) {
 		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", ExactTime, err)
 	}
 
-	return new(String2Time), nil
-}
-
-func main() {
-	fmt.Println("vim-go")
+	return st, nil
 }
 
 func Parse(input string) error {
@@ -117,71 +122,71 @@ func Parse(input string) error {
 }
 
 // Since takes a string starting with the word since
-// and parses the remainder as time.Duration
+// and parses the remainder as time.Duration, examples:
 // since 3/15/2022
 // since May 8, 2009 5:57:51 PM
 // since yesterday
 // since yesterday at 4pm
-func (st *String2Time) Since(input string) (time.Duration, error) {
+// since yesterday at 13:34:32
+func (st *String2Time) Since(input string) (*TimeRange, error) {
+	var tr = new(TimeRange)
+
 	var inputArr = strings.Fields(input)
 	if len(inputArr) < 2 {
-		return 0, errors.New("input must have two fields")
+		return tr, errors.New("input must have two fields")
 	}
 	if inputArr[0] != "since" {
-		return 0, errors.New("input does not start with 'since'")
+		return tr, errors.New("input does not start with 'since'")
 	}
 
 	var date time.Time
 	var err error
 
 	// is the whole thing a date?
-	if date, err = dateparse.ParseAny(input); err == nil {
-		return time.Since(date), nil
+	if date, err = dateparse.ParseIn(strings.Join(inputArr[1:], " "), st.Location, dateparse.RetryAmbiguousDateWithSwap(true)); err == nil {
+		tr.From = date
+		return tr, nil
 	}
 
 	var nextEleIsTime bool
 	for i := 1; i < len(inputArr); i++ {
+		//fmt.Println(i, inputArr[i])
+
 		if nextEleIsTime {
-			var parsed, err = st.parseTimeOrDateString(inputArr[i])
+			var err = st.parseTimeOrDateString(tr, inputArr[i])
 			if err != nil {
-				return 0, err
+				return tr, err
 			}
-			return time.Since(parsed), nil
+			return tr, nil
 		} else if syn, found := TimeSynonyms[inputArr[i]]; found {
-			date = syn()
+			tr.From = syn(st.Location)
 		} else if inputArr[i] == "at" {
 			nextEleIsTime = true
 		}
 	}
 
-	if len(inputArr) == 2 {
-		parsedTime, err := dateparse.ParseAny(inputArr[1])
-		if err != nil {
-			return 0, fmt.Errorf("error parsing since [date]: %w", err)
-		}
-		return time.Since(parsedTime), nil
-	}
-
-	return 0, nil // TODO
+	return tr, nil //errors.New("could not parse: " + input)
 }
 
-func (st *String2Time) parseTimeOrDateString(input string) (time.Time, error) {
+func (st *String2Time) parseTimeOrDateString(tr *TimeRange, input string) error {
 	if AMRegex.MatchString(input) {
 		var hourString = strings.ReplaceAll(input, "am", "")
 		var hourNum, err = strconv.Atoi(hourString)
 		if err != nil {
-			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+			return fmt.Errorf("error parsing time: %s, err: %w", input, err)
 		}
 
-		return time.Date(0, 0, 0, hourNum, 0, 0, 0, st.Location), nil
+		tr.From.Add(time.Duration(hourNum) * time.Hour)
+		return nil
 	} else if PMRegex.MatchString(input) {
 		var hourString = strings.ReplaceAll(input, "pm", "")
 		var hourNum, err = strconv.Atoi(hourString)
 		if err != nil {
-			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+			return fmt.Errorf("error parsing time: %s, err: %w", input, err)
 		}
 
-		return time.Date(0, 0, 0, hourNum, 0, 0, 0, st.Location), nil
+		tr.From = tr.From.Add(time.Duration(hourNum+12) * time.Hour)
+		return nil
 	} else if ExactTimeRegex.MatchString(input) {
 		var timeArr = strings.Split(input, ":")
 
@@ -191,68 +196,72 @@ func (st *String2Time) parseTimeOrDateString(input string) (time.Time, error) {
 		var second int
 		hour, err = strconv.Atoi(strings.ReplaceAll(timeArr[0], ":", ""))
 		if err != nil {
-			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+			return fmt.Errorf("error parsing time: %s, err: %w", input, err)
 		}
 		minute, err = strconv.Atoi(strings.ReplaceAll(timeArr[1], ":", ""))
 		if err != nil {
-			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+			return fmt.Errorf("error parsing time: %s, err: %w", input, err)
 		}
 		if len(timeArr) == 3 {
-			hour, err = strconv.Atoi(strings.ReplaceAll(timeArr[2], ":", ""))
+			second, err = strconv.Atoi(strings.ReplaceAll(timeArr[2], ":", ""))
 			if err != nil {
-				return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+				return fmt.Errorf("error parsing time: %s, err: %w", input, err)
 			}
 		}
-		return time.Date(0, 0, 0, hour, minute, second, 0, st.Location), nil
-	} else if DateDashRegex.MatchString(input) {
-		var timeArr = strings.Split(input, "-")
-		// TODO only works for MM/DD/YY for now
-		var err error
-		var day int
-		var month int
-		var year int
-		month, err = strconv.Atoi(strings.ReplaceAll(timeArr[0], "-", ""))
-		if err != nil {
-			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
-		}
-		day, err = strconv.Atoi(strings.ReplaceAll(timeArr[1], "-", ""))
-		if err != nil {
-			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
-		}
-		if len(timeArr) == 3 {
-			year, err = strconv.Atoi(strings.ReplaceAll(timeArr[2], "-", ""))
-			if err != nil {
-				return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
-			}
-		} else {
-			year = time.Now().Year()
-		}
-		return time.Date(year, time.Month(month), day, 0, 0, 0, 0, st.Location), nil
-	} else if DateSlashRegex.MatchString(input) {
-		var timeArr = strings.Split(input, "/")
-		// TODO only works for MM/DD/YY for now
-		var err error
-		var day int
-		var month int
-		var year int
-		month, err = strconv.Atoi(strings.ReplaceAll(timeArr[0], "/", ""))
-		if err != nil {
-			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
-		}
-		day, err = strconv.Atoi(strings.ReplaceAll(timeArr[1], "/", ""))
-		if err != nil {
-			return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
-		}
-		if len(timeArr) == 3 {
-			year, err = strconv.Atoi(strings.ReplaceAll(timeArr[2], "/", ""))
-			if err != nil {
-				return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
-			}
-		} else {
-			year = time.Now().Year()
-		}
-		return time.Date(year, time.Month(month), day, 0, 0, 0, 0, st.Location), nil
-	}
 
-	return time.Time{}, errors.New("unable to parse date: " + input)
+		tr.From = tr.From.Add(time.Duration(hour) * time.Hour).Add(time.Duration(minute) * time.Minute).Add(time.Duration(second) * time.Second)
+		return nil
+	}
+	/*
+		else if DateDashRegex.MatchString(input) {
+			var timeArr = strings.Split(input, "-")
+			// TODO only works for MM/DD/YY for now
+			var err error
+			var day int
+			var month int
+			var year int
+			month, err = strconv.Atoi(strings.ReplaceAll(timeArr[0], "-", ""))
+			if err != nil {
+				return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+			}
+			day, err = strconv.Atoi(strings.ReplaceAll(timeArr[1], "-", ""))
+			if err != nil {
+				return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+			}
+			if len(timeArr) == 3 {
+				year, err = strconv.Atoi(strings.ReplaceAll(timeArr[2], "-", ""))
+				if err != nil {
+					return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+				}
+			} else {
+				year = time.Now().Year()
+			}
+			return time.Date(year, time.Month(month), day, 0, 0, 0, 0, st.Location), nil
+		} else if DateSlashRegex.MatchString(input) {
+			var timeArr = strings.Split(input, "/")
+			// TODO only works for MM/DD/YY for now
+			var err error
+			var day int
+			var month int
+			var year int
+			month, err = strconv.Atoi(strings.ReplaceAll(timeArr[0], "/", ""))
+			if err != nil {
+				return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+			}
+			day, err = strconv.Atoi(strings.ReplaceAll(timeArr[1], "/", ""))
+			if err != nil {
+				return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+			}
+			if len(timeArr) == 3 {
+				year, err = strconv.Atoi(strings.ReplaceAll(timeArr[2], "/", ""))
+				if err != nil {
+					return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
+				}
+			} else {
+				year = time.Now().Year()
+			}
+			return time.Date(year, time.Month(month), day, 0, 0, 0, 0, st.Location), nil
+		}
+	*/
+	return errors.New("unable to parse date: " + input)
 }
