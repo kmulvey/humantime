@@ -1,0 +1,34 @@
+name: string2time
+
+on: push
+
+jobs:
+  build:
+    name: string2time build
+    strategy:
+      matrix:
+        go-version: [1.18.x]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+
+      - name: Set up Go 
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+        id: go
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --timeout=5m
+
+      - name: Build & Test
+        run: |
+          go mod tidy
+          go test -v -race -count 1 ./...
+          go build -v -ldflags="-s -w" ./...
