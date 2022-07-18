@@ -34,6 +34,7 @@ const DateSlash = `\d{1,2}/\d{1,2}/\d{2,4}`
 const DateDash = `\d{1,2}-\d{1,2}-\d{2,4}`
 const ExactTime = `\d{1,2}:\d{1,2}(:\d{1,2})?` // can detect optional seconds
 
+/*
 var Words = []string{
 	"since",
 	"ago",
@@ -44,6 +45,7 @@ var Words = []string{
 	"from",
 	"to",
 }
+*/
 
 var DurationWords = map[string]time.Duration{
 	"second":  time.Second,
@@ -77,16 +79,6 @@ var DurationStringToMilli = map[string]int{
 	"months":  int(time.Now().Month()),
 	"year":    time.Now().Year(),
 	"years":   time.Now().Year(),
-}
-
-var DurationWordsPlural = map[string]func(int) time.Duration{
-	"seconds": func(multiplier int) time.Duration { return time.Duration(multiplier) * DurationWords["second"] },
-	"minutes": func(multiplier int) time.Duration { return time.Duration(multiplier) * DurationWords["minute"] },
-	"hours":   func(multiplier int) time.Duration { return time.Duration(multiplier) * DurationWords["hour"] },
-	"days":    func(multiplier int) time.Duration { return time.Duration(multiplier) * DurationWords["day"] },
-	"weeks":   func(multiplier int) time.Duration { return time.Duration(multiplier) * DurationWords["week"] },
-	"months":  func(multiplier int) time.Duration { return time.Duration(multiplier) * DurationWords["month"] },
-	"years":   func(multiplier int) time.Duration { return time.Duration(multiplier) * DurationWords["year"] },
 }
 
 var TimeSynonyms = map[string]func(*time.Location) time.Time{
