@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/araddon/dateparse"
 )
 
 // 10 days ago
@@ -124,51 +122,6 @@ func (st *String2Time) Parse(input string) (*TimeRange, error) {
 	return nil, nil
 }
 
-// Since takes a string starting with the word since
-// and parses the remainder as time.Duration, examples:
-// since 3/15/2022
-// since May 8, 2009 5:57:51 PM
-// since yesterday
-// since yesterday at 4pm
-// since yesterday at 13:34:32
-func (st *String2Time) Since(input string) (*TimeRange, error) {
-	var tr = new(TimeRange)
-
-	var inputArr = strings.Fields(input)
-	if len(inputArr) < 2 {
-		return tr, errors.New("input must have two fields")
-	}
-	if inputArr[0] != "since" {
-		return tr, errors.New("input does not start with 'since'")
-	}
-
-	var date time.Time
-	var err error
-
-	// is the whole thing a date?
-	if date, err = dateparse.ParseIn(strings.Join(inputArr[1:], " "), st.Location, dateparse.RetryAmbiguousDateWithSwap(true)); err == nil {
-		tr.From = date
-		return tr, nil
-	}
-
-	var nextEleIsTime bool
-	for i := 1; i < len(inputArr); i++ {
-		if nextEleIsTime {
-			var err = st.parseTimeOrDateString(tr, inputArr[i])
-			if err != nil {
-				return tr, err
-			}
-			return tr, nil
-		} else if syn, found := TimeSynonyms[inputArr[i]]; found {
-			tr.From = syn(st.Location)
-		} else if inputArr[i] == "at" {
-			nextEleIsTime = true
-		}
-	}
-
-	return tr, nil
-}
-
 func (st *String2Time) parseTimeOrDateString(tr *TimeRange, input string) error {
 	if AMRegex.MatchString(input) {
 		var hourString = strings.ReplaceAll(input, "am", "")
@@ -213,56 +166,5 @@ func (st *String2Time) parseTimeOrDateString(tr *TimeRange, input string) error 
 		tr.From = tr.From.Add(time.Duration(hour) * time.Hour).Add(time.Duration(minute) * time.Minute).Add(time.Duration(second) * time.Second)
 		return nil
 	}
-	/*
-		else if DateDashRegex.MatchString(input) {
-			var timeArr = strings.Split(input, "-")
-			// TODO only works for MM/DD/YY for now
-			var err error
-			var day int
-			var month int
-			var year int
-			month, err = strconv.Atoi(strings.ReplaceAll(timeArr[0], "-", ""))
-			if err != nil {
-				return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
-			}
-			day, err = strconv.Atoi(strings.ReplaceAll(timeArr[1], "-", ""))
-			if err != nil {
-				return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
-			}
-			if len(timeArr) == 3 {
-				year, err = strconv.Atoi(strings.ReplaceAll(timeArr[2], "-", ""))
-				if err != nil {
-					return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
-				}
-			} else {
-				year = time.Now().Year()
-			}
-			return time.Date(year, time.Month(month), day, 0, 0, 0, 0, st.Location), nil
-		} else if DateSlashRegex.MatchString(input) {
-			var timeArr = strings.Split(input, "/")
-			// TODO only works for MM/DD/YY for now
-			var err error
-			var day int
-			var month int
-			var year int
-			month, err = strconv.Atoi(strings.ReplaceAll(timeArr[0], "/", ""))
-			if err != nil {
-				return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
-			}
-			day, err = strconv.Atoi(strings.ReplaceAll(timeArr[1], "/", ""))
-			if err != nil {
-				return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
-			}
-			if len(timeArr) == 3 {
-				year, err = strconv.Atoi(strings.ReplaceAll(timeArr[2], "/", ""))
-				if err != nil {
-					return time.Time{}, fmt.Errorf("error parsing time: %s, err: %w", input, err)
-				}
-			} else {
-				year = time.Now().Year()
-			}
-			return time.Date(year, time.Month(month), day, 0, 0, 0, 0, st.Location), nil
-		}
-	*/
 	return errors.New("unable to parse date: " + input)
 }
