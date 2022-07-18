@@ -16,6 +16,11 @@ import (
 
 type String2Time struct {
 	*time.Location
+	AMRegex        *regexp.Regexp
+	PMRegex        *regexp.Regexp
+	DateSlashRegex *regexp.Regexp
+	DateDashRegex  *regexp.Regexp
+	ExactTimeRegex *regexp.Regexp
 }
 
 type TimeRange struct {
@@ -28,11 +33,6 @@ const PM = `^\dpm`
 const DateSlash = `\d{1,2}/\d{1,2}/\d{2,4}`
 const DateDash = `\d{1,2}-\d{1,2}-\d{2,4}`
 const ExactTime = `\d{1,2}:\d{1,2}(:\d{1,2})?` // can detect optional seconds
-var AMRegex *regexp.Regexp
-var PMRegex *regexp.Regexp
-var DateSlashRegex *regexp.Regexp
-var DateDashRegex *regexp.Regexp
-var ExactTimeRegex *regexp.Regexp
 
 var Words = []string{
 	"since",
@@ -46,23 +46,47 @@ var Words = []string{
 }
 
 var DurationWords = map[string]time.Duration{
-	"second": time.Second,
-	"minute": time.Minute,
-	"hour":   time.Hour,
-	"day":    time.Hour * 24,
-	"week":   time.Hour * 24 * 7,
-	"month":  time.Hour * 24 * 7 * 30,      // TODO 30 is probaby wrong here
-	"year":   time.Hour * 24 * 7 * 30 * 12, // TODO 30 is probaby wrong here
+	"second":  time.Second,
+	"seconds": time.Second,
+	"minute":  time.Minute,
+	"minutes": time.Minute,
+	"hour":    time.Hour,
+	"hours":   time.Hour,
+	"day":     time.Hour * 24,
+	"days":    time.Hour * 24,
+	"week":    time.Hour * 24 * 7,
+	"weeks":   time.Hour * 24 * 7,
+	"month":   time.Hour * 24 * 7 * 30, // TODO 30 is probaby wrong here
+	"months":  time.Hour * 24 * 7 * 30, // TODO 30 is probaby wrong here
+	"year":    time.Second * 31536000,  // TODO 30 is probaby wrong here
+	"years":   time.Second * 31536000,  // TODO 30 is probaby wrong here
 }
 
-var DurationWordsPlural = map[string]func(time.Duration) time.Duration{
-	"seconds": func(multiplier time.Duration) time.Duration { return multiplier * DurationWords["second"] },
-	"minutes": func(multiplier time.Duration) time.Duration { return multiplier * DurationWords["minute"] },
-	"hours":   func(multiplier time.Duration) time.Duration { return multiplier * DurationWords["hour"] },
-	"days":    func(multiplier time.Duration) time.Duration { return multiplier * DurationWords["day"] },
-	"weeks":   func(multiplier time.Duration) time.Duration { return multiplier * DurationWords["week"] },
-	"months":  func(multiplier time.Duration) time.Duration { return multiplier * DurationWords["month"] },
-	"years":   func(multiplier time.Duration) time.Duration { return multiplier * DurationWords["year"] },
+var DurationStringToMilli = map[string]int{
+	"second":  time.Now().Second(),
+	"seconds": time.Now().Second(),
+	"minute":  time.Now().Minute(),
+	"minutes": time.Now().Minute(),
+	"hour":    time.Now().Hour(),
+	"hours":   time.Now().Hour(),
+	"day":     time.Now().Day(),
+	"days":    time.Now().Day(),
+	"week":    time.Now().Day() * 7,
+	"weeks":   time.Now().Day() * 7,
+	"month":   int(time.Now().Month()),
+	"months":  int(time.Now().Month()),
+	"year":    time.Now().Year(),
+	"years":   time.Now().Year(),
+}
+
+var DurationWordsPlural = map[string]func(int) time.Duration{
+	"seconds": func(multiplier int) time.Duration { return time.Duration(multiplier) * DurationWords["second"] },
+	"minutes": func(multiplier int) time.Duration { return time.Duration(multiplier) * DurationWords["minute"] },
+	"hours":   func(multiplier int) time.Duration { return time.Duration(multiplier) * DurationWords["hour"] },
+	"days":    func(multiplier int) time.Duration { return time.Duration(multiplier) * DurationWords["day"] },
+	"weeks":   func(multiplier int) time.Duration { return time.Duration(multiplier) * DurationWords["week"] },
+	"months":  func(multiplier int) time.Duration { return time.Duration(multiplier) * DurationWords["month"] },
+	"years":   func(multiplier int) time.Duration { return time.Duration(multiplier) * DurationWords["year"] },
 }
 
 var TimeSynonyms = map[string]func(*time.Location) time.Time{
@@ -85,23 +109,23 @@ func NewString2Time(loc *time.Location) (*String2Time, error) {
 	st.Location = loc
 
 	// init regexs
-	AMRegex, err = regexp.Compile(AM)
+	st.AMRegex, err = regexp.Compile(AM)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", AM, err)
 	}
-	PMRegex, err = regexp.Compile(PM)
+	st.PMRegex, err = regexp.Compile(PM)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", PM, err)
 	}
-	DateSlashRegex, err = regexp.Compile(DateSlash)
+	st.DateSlashRegex, err = regexp.Compile(DateSlash)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", DateSlash, err)
 	}
-	DateDashRegex, err = regexp.Compile(DateDash)
+	st.DateDashRegex, err = regexp.Compile(DateDash)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", DateDash, err)
 	}
-	ExactTimeRegex, err = regexp.Compile(ExactTime)
+	st.ExactTimeRegex, err = regexp.Compile(ExactTime)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", ExactTime, err)
 	}
@@ -117,13 +141,15 @@ func (st *String2Time) Parse(input string) (*TimeRange, error) {
 
 	if strings.Contains(input, "since") {
 		return st.Since(input)
+	} else if strings.Contains(input, "ago") {
+		return st.Ago(input)
 	}
 
 	return nil, nil
 }
 
 func (st *String2Time) parseTimeOrDateString(tr *TimeRange, input string) error {
-	if AMRegex.MatchString(input) {
+	if st.AMRegex.MatchString(input) {
 		var hourString = strings.ReplaceAll(input, "am", "")
 		var hourNum, err = strconv.Atoi(hourString)
 		if err != nil {
@@ -132,7 +158,7 @@ func (st *String2Time) parseTimeOrDateString(tr *TimeRange, input string) error 
 
 		tr.From.Add(time.Duration(hourNum) * time.Hour)
 		return nil
-	} else if PMRegex.MatchString(input) {
+	} else if st.PMRegex.MatchString(input) {
 		var hourString = strings.ReplaceAll(input, "pm", "")
 		var hourNum, err = strconv.Atoi(hourString)
 		if err != nil {
@@ -141,7 +167,7 @@ func (st *String2Time) parseTimeOrDateString(tr *TimeRange, input string) error 
 
 		tr.From = tr.From.Add(time.Duration(hourNum+12) * time.Hour)
 		return nil
-	} else if ExactTimeRegex.MatchString(input) {
+	} else if st.ExactTimeRegex.MatchString(input) {
 		var timeArr = strings.Split(input, ":")
 
 		var err error
