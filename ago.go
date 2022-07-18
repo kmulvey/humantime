@@ -17,7 +17,7 @@ func (st *String2Time) Ago(input string) (*TimeRange, error) {
 
 	var inputArr = strings.Fields(input)
 	if len(inputArr) < 3 {
-		return tr, errors.New("input must have two fields")
+		return tr, errors.New("input must have three fields")
 	}
 
 	var multiple, err = strconv.Atoi(inputArr[0])
@@ -31,6 +31,7 @@ func (st *String2Time) Ago(input string) (*TimeRange, error) {
 	}
 
 	tr.From = time.Now().Add(time.Duration(multiple*-1) * unit)
+	tr.To = time.Now().In(st.Location)
 
 	return tr, nil
 }

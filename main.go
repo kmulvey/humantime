@@ -94,6 +94,29 @@ var TimeSynonyms = map[string]func(*time.Location) time.Time{
 	},
 }
 
+func (v TimeRange) String() string {
+	return fmt.Sprintf("From: %s, To: %s", v.From.Format(time.RFC822), v.To.Format(time.RFC822))
+}
+
+func (v *TimeRange) Get(s string) TimeRange {
+	return *v
+}
+
+func (v *TimeRange) Set(s string) error {
+	var st, err = NewString2Time(time.UTC) // TODO not always utc
+	if err != nil {
+		return err
+	}
+
+	if r, err := st.Parse(s); err != nil {
+		return err
+	} else {
+		v.To = r.To
+		v.From = r.From
+	}
+	return nil
+}
+
 func NewString2Time(loc *time.Location) (*String2Time, error) {
 
 	var err error

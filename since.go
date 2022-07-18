@@ -45,6 +45,7 @@ func (st *String2Time) Since(input string) (*TimeRange, error) {
 			return tr, nil
 		} else if syn, found := TimeSynonyms[inputArr[i]]; found {
 			tr.From = syn(st.Location)
+			tr.To = time.Now().In(st.Location)
 		} else if inputArr[i] == "at" {
 			nextEleIsTime = true
 		}
