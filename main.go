@@ -117,7 +117,7 @@ func (st *String2Time) Parse(input string) (*TimeRange, error) {
 		return nil, errors.New("input must have at least two fields")
 	}
 
-	if strings.HasPrefix(input, "since") {
+	if strings.Contains(input, "since") {
 		return st.Since(input)
 	}
 
@@ -153,8 +153,6 @@ func (st *String2Time) Since(input string) (*TimeRange, error) {
 
 	var nextEleIsTime bool
 	for i := 1; i < len(inputArr); i++ {
-		//fmt.Println(i, inputArr[i])
-
 		if nextEleIsTime {
 			var err = st.parseTimeOrDateString(tr, inputArr[i])
 			if err != nil {
@@ -168,7 +166,7 @@ func (st *String2Time) Since(input string) (*TimeRange, error) {
 		}
 	}
 
-	return tr, nil //errors.New("could not parse: " + input)
+	return tr, nil
 }
 
 func (st *String2Time) parseTimeOrDateString(tr *TimeRange, input string) error {
