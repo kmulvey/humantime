@@ -25,15 +25,6 @@ const DateSlash = `\d{1,2}/\d{1,2}/\d{2,4}`
 const DateDash = `\d{1,2}-\d{1,2}-\d{2,4}`
 const ExactTime = `\d{1,2}:\d{1,2}(:\d{1,2})?` // can detect optional seconds
 
-/*
-var Words = []string{
-	"until",
-	"til",
-	"after",
-	"before",
-}
-*/
-
 var DurationWords = map[string]time.Duration{
 	"second":  time.Second,
 	"seconds": time.Second,

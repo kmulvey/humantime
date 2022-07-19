@@ -81,6 +81,10 @@ func (st *Humantime) Parse(input string) (*TimeRange, error) {
 		return st.Ago(input)
 	} else if strings.Contains(input, "til") {
 		return st.Until(input)
+	} else if strings.Contains(input, "before") {
+		return st.Before(input)
+	} else if strings.Contains(input, "after") {
+		return st.After(input)
 	} else if strings.Contains(input, "from") && strings.Contains(input, "to") {
 		return st.FromTo(input)
 	}
