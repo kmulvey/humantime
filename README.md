@@ -10,6 +10,8 @@ Convert English strings related to time to Go time.Time. This package also imple
   - yesterday
   - yesterday at 4pm
   - tomorrow at 13:34:32
+- A complete list of supported date formats can be found [here](https://github.com/araddon/dateparse#extended-example)
+  - In addition to this list, "yesterday", "today" and "tomorrow" are also supported
   
 ## Supported formats
   - since [date phrase]
