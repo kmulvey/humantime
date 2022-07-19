@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/araddon/dateparse"
 )
 
 // String fulfils the flag.Value interface https://pkg.go.dev/flag#Value
@@ -129,4 +131,40 @@ func (st *String2Time) parseTimeString(tr *TimeRange, input string) error {
 		return nil
 	}
 	return errors.New("unable to parse date: " + input)
+}
+
+func (st *String2Time) parseDatePhrase(input string) (time.Time, error) {
+	var tr = new(TimeRange)
+
+	// is the whole thing a date?
+	if date, err := dateparse.ParseIn(input, st.Location, dateparse.RetryAmbiguousDateWithSwap(true)); err == nil {
+		return date, nil
+	}
+
+	var nextEleIsTime bool
+	var inputArr = strings.Fields(input)
+	for i := 0; i < len(inputArr); i++ {
+		if nextEleIsTime {
+			var err = st.parseTimeString(tr, inputArr[i])
+			if err != nil {
+				return time.Time{}, err
+			}
+			return tr.From, nil
+		} else if syn, found := TimeSynonyms[inputArr[i]]; found {
+			tr.From = syn(st.Location)
+		} else if inputArr[i] == "at" {
+			nextEleIsTime = true
+		} else if len(inputArr) == 1 {
+			// this block is time only and assumes the time is for today e.g. "2am"
+			var now = time.Now().In(st.Location)
+			tr.From = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, st.Location)
+			var err = st.parseTimeString(tr, inputArr[i])
+			if err != nil {
+				return time.Time{}, err
+			}
+			return tr.From, nil
+		}
+	}
+
+	return tr.From, nil
 }
