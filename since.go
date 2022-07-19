@@ -28,7 +28,7 @@ func (st *String2Time) Since(input string) (*TimeRange, error) {
 	}
 
 	var err error
-	tr.From, err = st.parseDatePhrase(input)
+	tr.From, err = st.parseDatePhrase(strings.ReplaceAll(input, "since ", ""))
 	return tr, err
 }
 
@@ -36,13 +36,13 @@ func (st *String2Time) parseDatePhrase(input string) (time.Time, error) {
 	var tr = new(TimeRange)
 
 	// is the whole thing a date?
-	if date, err := dateparse.ParseIn(strings.ReplaceAll(input, "since ", ""), st.Location, dateparse.RetryAmbiguousDateWithSwap(true)); err == nil {
+	if date, err := dateparse.ParseIn(input, st.Location, dateparse.RetryAmbiguousDateWithSwap(true)); err == nil {
 		return date, nil
 	}
 
 	var nextEleIsTime bool
 	var inputArr = strings.Fields(input)
-	for i := 1; i < len(inputArr); i++ { // start at 1 so we skip 'since'
+	for i := 0; i < len(inputArr); i++ {
 		if nextEleIsTime {
 			var err = st.parseTimeOrDateString(tr, inputArr[i])
 			if err != nil {
@@ -53,7 +53,7 @@ func (st *String2Time) parseDatePhrase(input string) (time.Time, error) {
 			tr.From = syn(st.Location)
 		} else if inputArr[i] == "at" {
 			nextEleIsTime = true
-		} else if len(inputArr) == 2 {
+		} else if len(inputArr) == 1 {
 			// this block is time only and assumes the time is for today e.g. "2am"
 			var now = time.Now().In(st.Location)
 			tr.From = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, st.Location)

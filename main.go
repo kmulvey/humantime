@@ -87,6 +87,11 @@ var TimeSynonyms = map[string]func(*time.Location) time.Time{
 		var y, m, d = now.Date()
 		return time.Date(y, m, d, 0, 0, 0, 0, loc)
 	},
+	"today": func(loc *time.Location) time.Time {
+		var now = time.Now()
+		var y, m, d = now.Date()
+		return time.Date(y, m, d, 0, 0, 0, 0, loc)
+	},
 	"tomorrow": func(loc *time.Location) time.Time {
 		var now = time.Now().Add(time.Hour * 24)
 		var y, m, d = now.Date()
