@@ -12,18 +12,20 @@ import (
 // and parses the remainder as time.Duration, examples:
 // since 3/15/2022
 // since May 8, 2009 5:57:51 PM
+// since 2am
 // since yesterday
 // since yesterday at 4pm
 // since yesterday at 13:34:32
 func (st *String2Time) Since(input string) (*TimeRange, error) {
 	var tr = new(TimeRange)
+	tr.To = time.Now().In(st.Location)
 
 	var inputArr = strings.Fields(input)
 	if len(inputArr) < 2 {
-		return tr, errors.New("input must have two fields")
+		return nil, errors.New("input must have two fields")
 	}
 	if inputArr[0] != "since" {
-		return tr, errors.New("input does not start with 'since'")
+		return nil, errors.New("input does not start with 'since'")
 	}
 
 	var date time.Time
@@ -40,14 +42,21 @@ func (st *String2Time) Since(input string) (*TimeRange, error) {
 		if nextEleIsTime {
 			var err = st.parseTimeOrDateString(tr, inputArr[i])
 			if err != nil {
-				return tr, err
+				return nil, err
 			}
 			return tr, nil
 		} else if syn, found := TimeSynonyms[inputArr[i]]; found {
 			tr.From = syn(st.Location)
-			tr.To = time.Now().In(st.Location)
 		} else if inputArr[i] == "at" {
 			nextEleIsTime = true
+		} else {
+			// this block is time only and assumes the time is for today e.g. "2am"
+			tr.From = time.Date(tr.To.Year(), tr.To.Month(), tr.To.Day(), 0, 0, 0, 0, tr.To.Location())
+			var err = st.parseTimeOrDateString(tr, inputArr[i])
+			if err != nil {
+				return nil, err
+			}
+			return tr, nil
 		}
 	}
 

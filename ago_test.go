@@ -16,10 +16,10 @@ func TestAgo(t *testing.T) {
 	result, err := st.Ago("3 days ago")
 	assert.NoError(t, err)
 	assert.Equal(t, now.Add(time.Hour*24*-3).Round(time.Second), result.From.Round(time.Second))
-	assert.Equal(t, time.Time{}, result.To)
+	assert.Equal(t, now.Round(time.Second), result.To.Round(time.Second))
 
 	result, err = st.Ago("14 years ago")
 	assert.NoError(t, err)
 	assert.Equal(t, now.Add(time.Second*31536000*-14).Round(time.Second), result.From.Round(time.Second))
-	assert.Equal(t, time.Time{}, result.To)
+	assert.Equal(t, now.Round(time.Second), result.To.Round(time.Second))
 }
