@@ -9,104 +9,17 @@ import (
 	"time"
 )
 
-// 10 days ago
-// since yesterday
-// since last week
-// since
-
-type String2Time struct {
-	*time.Location
-	AMRegex        *regexp.Regexp
-	PMRegex        *regexp.Regexp
-	DateSlashRegex *regexp.Regexp
-	DateDashRegex  *regexp.Regexp
-	ExactTimeRegex *regexp.Regexp
-}
-
-type TimeRange struct {
-	From time.Time
-	To   time.Time
-}
-
-const AM = `^\dam`
-const PM = `^\dpm`
-const DateSlash = `\d{1,2}/\d{1,2}/\d{2,4}`
-const DateDash = `\d{1,2}-\d{1,2}-\d{2,4}`
-const ExactTime = `\d{1,2}:\d{1,2}(:\d{1,2})?` // can detect optional seconds
-
-/*
-var Words = []string{
-	"since",
-	"ago",
-	"until",
-	"til",
-	"after",
-	"before",
-	"from",
-	"to",
-}
-*/
-
-var DurationWords = map[string]time.Duration{
-	"second":  time.Second,
-	"seconds": time.Second,
-	"minute":  time.Minute,
-	"minutes": time.Minute,
-	"hour":    time.Hour,
-	"hours":   time.Hour,
-	"day":     time.Hour * 24,
-	"days":    time.Hour * 24,
-	"week":    time.Hour * 24 * 7,
-	"weeks":   time.Hour * 24 * 7,
-	"month":   time.Hour * 24 * 7 * 30, // TODO 30 is probaby wrong here
-	"months":  time.Hour * 24 * 7 * 30, // TODO 30 is probaby wrong here
-	"year":    time.Second * 31536000,  // TODO 30 is probaby wrong here
-	"years":   time.Second * 31536000,  // TODO 30 is probaby wrong here
-}
-
-var DurationStringToMilli = map[string]int{
-	"second":  time.Now().Second(),
-	"seconds": time.Now().Second(),
-	"minute":  time.Now().Minute(),
-	"minutes": time.Now().Minute(),
-	"hour":    time.Now().Hour(),
-	"hours":   time.Now().Hour(),
-	"day":     time.Now().Day(),
-	"days":    time.Now().Day(),
-	"week":    time.Now().Day() * 7,
-	"weeks":   time.Now().Day() * 7,
-	"month":   int(time.Now().Month()),
-	"months":  int(time.Now().Month()),
-	"year":    time.Now().Year(),
-	"years":   time.Now().Year(),
-}
-
-var TimeSynonyms = map[string]func(*time.Location) time.Time{
-	"yesterday": func(loc *time.Location) time.Time {
-		var now = time.Now().Add(time.Hour * -24)
-		var y, m, d = now.Date()
-		return time.Date(y, m, d, 0, 0, 0, 0, loc)
-	},
-	"today": func(loc *time.Location) time.Time {
-		var now = time.Now()
-		var y, m, d = now.Date()
-		return time.Date(y, m, d, 0, 0, 0, 0, loc)
-	},
-	"tomorrow": func(loc *time.Location) time.Time {
-		var now = time.Now().Add(time.Hour * 24)
-		var y, m, d = now.Date()
-		return time.Date(y, m, d, 0, 0, 0, 0, loc)
-	},
-}
-
+// String fulfils the flag.Value interface https://pkg.go.dev/flag#Value
 func (v TimeRange) String() string {
 	return fmt.Sprintf("From: %s, To: %s", v.From.Format(time.RFC822), v.To.Format(time.RFC822))
 }
 
+// Get fulfils the flag.Getter interface https://pkg.go.dev/flag#Getter
 func (v *TimeRange) Get(s string) TimeRange {
 	return *v
 }
 
+// Set fulfils the flag.Value interface https://pkg.go.dev/flag#Value
 func (v *TimeRange) Set(s string) error {
 	var st, err = NewString2Time(time.UTC) // TODO not always utc
 	if err != nil {
@@ -122,6 +35,7 @@ func (v *TimeRange) Set(s string) error {
 	return nil
 }
 
+// NewString2Time is just a constructor
 func NewString2Time(loc *time.Location) (*String2Time, error) {
 
 	var err error
@@ -153,6 +67,8 @@ func NewString2Time(loc *time.Location) (*String2Time, error) {
 	return st, nil
 }
 
+// Parse is the entry point for parsing English input and performs the
+// switching between different phrase types
 func (st *String2Time) Parse(input string) (*TimeRange, error) {
 
 	input = strings.ToLower(input)
@@ -161,6 +77,8 @@ func (st *String2Time) Parse(input string) (*TimeRange, error) {
 		return st.Since(input)
 	} else if strings.Contains(input, "ago") {
 		return st.Ago(input)
+	} else if strings.Contains(input, "from") && strings.Contains(input, "to") {
+		return st.FromTo(input)
 	}
 
 	return nil, nil
