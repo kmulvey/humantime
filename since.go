@@ -44,7 +44,7 @@ func (st *String2Time) parseDatePhrase(input string) (time.Time, error) {
 	var inputArr = strings.Fields(input)
 	for i := 0; i < len(inputArr); i++ {
 		if nextEleIsTime {
-			var err = st.parseTimeOrDateString(tr, inputArr[i])
+			var err = st.parseTimeString(tr, inputArr[i])
 			if err != nil {
 				return time.Time{}, err
 			}
@@ -57,7 +57,7 @@ func (st *String2Time) parseDatePhrase(input string) (time.Time, error) {
 			// this block is time only and assumes the time is for today e.g. "2am"
 			var now = time.Now().In(st.Location)
 			tr.From = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, st.Location)
-			var err = st.parseTimeOrDateString(tr, inputArr[i])
+			var err = st.parseTimeString(tr, inputArr[i])
 			if err != nil {
 				return time.Time{}, err
 			}

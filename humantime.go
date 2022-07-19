@@ -84,7 +84,7 @@ func (st *String2Time) Parse(input string) (*TimeRange, error) {
 	return nil, nil
 }
 
-func (st *String2Time) parseTimeOrDateString(tr *TimeRange, input string) error {
+func (st *String2Time) parseTimeString(tr *TimeRange, input string) error {
 	if st.AMRegex.MatchString(input) {
 		var hourString = strings.ReplaceAll(input, "am", "")
 		var hourNum, err = strconv.Atoi(hourString)
