@@ -149,10 +149,8 @@ func NewString2Time(loc *time.Location) (*String2Time, error) {
 }
 
 func (st *String2Time) Parse(input string) (*TimeRange, error) {
-	var inputArr = strings.Fields(input)
-	if len(inputArr) < 2 {
-		return nil, errors.New("input must have at least two fields")
-	}
+
+	input = strings.ToLower(input)
 
 	if strings.Contains(input, "since") {
 		return st.Since(input)
@@ -171,7 +169,7 @@ func (st *String2Time) parseTimeOrDateString(tr *TimeRange, input string) error 
 			return fmt.Errorf("error parsing time: %s, err: %w", input, err)
 		}
 
-		tr.From.Add(time.Duration(hourNum) * time.Hour)
+		tr.From = tr.From.Add(time.Duration(hourNum) * time.Hour)
 		return nil
 	} else if st.PMRegex.MatchString(input) {
 		var hourString = strings.ReplaceAll(input, "pm", "")
