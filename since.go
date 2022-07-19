@@ -20,45 +20,50 @@ func (st *String2Time) Since(input string) (*TimeRange, error) {
 	var tr = new(TimeRange)
 	tr.To = time.Now().In(st.Location)
 
-	var inputArr = strings.Fields(input)
-	if len(inputArr) < 2 {
+	if len(strings.Fields(input)) < 2 {
 		return nil, errors.New("input must have two fields")
 	}
-	if inputArr[0] != "since" {
+	if !strings.HasPrefix(input, "since") {
 		return nil, errors.New("input does not start with 'since'")
 	}
 
-	var date time.Time
 	var err error
+	tr.From, err = st.parseDatePhrase(input)
+	return tr, err
+}
+
+func (st *String2Time) parseDatePhrase(input string) (time.Time, error) {
+	var tr = new(TimeRange)
 
 	// is the whole thing a date?
-	if date, err = dateparse.ParseIn(strings.Join(inputArr[1:], " "), st.Location, dateparse.RetryAmbiguousDateWithSwap(true)); err == nil {
-		tr.From = date
-		return tr, nil
+	if date, err := dateparse.ParseIn(strings.ReplaceAll(input, "since ", ""), st.Location, dateparse.RetryAmbiguousDateWithSwap(true)); err == nil {
+		return date, nil
 	}
 
 	var nextEleIsTime bool
-	for i := 1; i < len(inputArr); i++ {
+	var inputArr = strings.Fields(input)
+	for i := 1; i < len(inputArr); i++ { // start at 1 so we skip 'since'
 		if nextEleIsTime {
 			var err = st.parseTimeOrDateString(tr, inputArr[i])
 			if err != nil {
-				return nil, err
+				return time.Time{}, err
 			}
-			return tr, nil
+			return tr.From, nil
 		} else if syn, found := TimeSynonyms[inputArr[i]]; found {
 			tr.From = syn(st.Location)
 		} else if inputArr[i] == "at" {
 			nextEleIsTime = true
-		} else {
+		} else if len(inputArr) == 2 {
 			// this block is time only and assumes the time is for today e.g. "2am"
-			tr.From = time.Date(tr.To.Year(), tr.To.Month(), tr.To.Day(), 0, 0, 0, 0, tr.To.Location())
+			var now = time.Now().In(st.Location)
+			tr.From = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, st.Location)
 			var err = st.parseTimeOrDateString(tr, inputArr[i])
 			if err != nil {
-				return nil, err
+				return time.Time{}, err
 			}
-			return tr, nil
+			return tr.From, nil
 		}
 	}
 
-	return tr, nil
+	return tr.From, nil
 }
