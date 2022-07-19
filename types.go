@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type String2Time struct {
+type Humantime struct {
 	*time.Location
 	AMRegex        *regexp.Regexp
 	PMRegex        *regexp.Regexp

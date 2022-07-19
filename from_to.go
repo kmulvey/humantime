@@ -9,7 +9,7 @@ import (
 // and parses the remainder as time.Duration, examples:
 // 3 hours ago
 // 8 days and three hours ago
-func (st *String2Time) FromTo(input string) (*TimeRange, error) {
+func (st *Humantime) FromTo(input string) (*TimeRange, error) {
 	var tr = new(TimeRange)
 
 	if !strings.HasPrefix(input, "from ") {

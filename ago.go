@@ -12,7 +12,7 @@ import (
 // and parses the remainder as time.Duration, examples:
 // 3 hours ago
 // 8 days and three hours ago
-func (st *String2Time) Ago(input string) (*TimeRange, error) {
+func (st *Humantime) Ago(input string) (*TimeRange, error) {
 	var tr = new(TimeRange)
 
 	var inputArr = strings.Fields(input)

@@ -14,7 +14,7 @@ import (
 // since yesterday
 // since yesterday at 4pm
 // since yesterday at 13:34:32
-func (st *String2Time) Since(input string) (*TimeRange, error) {
+func (st *Humantime) Since(input string) (*TimeRange, error) {
 	var tr = new(TimeRange)
 	tr.To = time.Now().In(st.Location)
 

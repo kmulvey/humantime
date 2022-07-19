@@ -38,10 +38,10 @@ func (v *TimeRange) Set(s string) error {
 }
 
 // NewString2Time is just a constructor
-func NewString2Time(loc *time.Location) (*String2Time, error) {
+func NewString2Time(loc *time.Location) (*Humantime, error) {
 
 	var err error
-	var st = new(String2Time)
+	var st = new(Humantime)
 	st.Location = loc
 
 	// init regexs
@@ -71,7 +71,7 @@ func NewString2Time(loc *time.Location) (*String2Time, error) {
 
 // Parse is the entry point for parsing English input and performs the
 // switching between different phrase types
-func (st *String2Time) Parse(input string) (*TimeRange, error) {
+func (st *Humantime) Parse(input string) (*TimeRange, error) {
 
 	input = strings.ToLower(input)
 
@@ -79,6 +79,8 @@ func (st *String2Time) Parse(input string) (*TimeRange, error) {
 		return st.Since(input)
 	} else if strings.Contains(input, "ago") {
 		return st.Ago(input)
+	} else if strings.Contains(input, "til") {
+		return st.Until(input)
 	} else if strings.Contains(input, "from") && strings.Contains(input, "to") {
 		return st.FromTo(input)
 	}
@@ -86,7 +88,7 @@ func (st *String2Time) Parse(input string) (*TimeRange, error) {
 	return nil, nil
 }
 
-func (st *String2Time) parseTimeString(tr *TimeRange, input string) error {
+func (st *Humantime) parseTimeString(tr *TimeRange, input string) error {
 	if st.AMRegex.MatchString(input) {
 		var hourString = strings.ReplaceAll(input, "am", "")
 		var hourNum, err = strconv.Atoi(hourString)
@@ -133,7 +135,7 @@ func (st *String2Time) parseTimeString(tr *TimeRange, input string) error {
 	return errors.New("unable to parse date: " + input)
 }
 
-func (st *String2Time) parseDatePhrase(input string) (time.Time, error) {
+func (st *Humantime) parseDatePhrase(input string) (time.Time, error) {
 	var tr = new(TimeRange)
 
 	// is the whole thing a date?
