@@ -12,6 +12,8 @@ type Humantime struct {
 	DateSlashRegex *regexp.Regexp
 	DateDashRegex  *regexp.Regexp
 	ExactTimeRegex *regexp.Regexp
+	WeekdayRegex   *regexp.Regexp
+	SynonymRegex   *regexp.Regexp
 }
 
 type TimeRange struct {
@@ -24,6 +26,8 @@ const PM = `^\dpm`
 const DateSlash = `\d{1,2}/\d{1,2}/\d{2,4}`
 const DateDash = `\d{1,2}-\d{1,2}-\d{2,4}`
 const ExactTime = `\d{1,2}:\d{1,2}(:\d{1,2})?` // can detect optional seconds
+const Weekdays = `\b(next|last|this) ((mon|tues|wed(nes)?|thur(s)?|fri|sat(ur)?|sun)(day)?)\b`
+const Synonyms = `(yesterday|today|tomorrow)`
 
 var DurationWords = map[string]time.Duration{
 	"second":  time.Second,

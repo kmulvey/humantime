@@ -65,6 +65,14 @@ func NewString2Time(loc *time.Location) (*Humantime, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", ExactTime, err)
 	}
+	st.WeekdayRegex, err = regexp.Compile(Weekdays)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", Weekdays, err)
+	}
+	st.SynonymRegex, err = regexp.Compile(Synonyms)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", Synonyms, err)
+	}
 
 	return st, nil
 }
@@ -182,3 +190,13 @@ func (st *Humantime) parseDatePhrase(input string) (time.Time, error) {
 
 	return tr.From, nil
 }
+
+/*
+	var now = time.Now()
+	fmt.Println(now)
+	var today = float64(now.Weekday())
+	var friday = float64(time.Friday)
+	fmt.Println(now.Weekday() - time.Friday)
+	fmt.Println(math.Abs(today - friday))
+	fmt.Println(now.AddDate(0, 0, int(math.Abs(today-friday))))
+*/
