@@ -1,4 +1,4 @@
-package string2time
+package humantime
 
 import (
 	"testing"

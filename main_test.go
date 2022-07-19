@@ -1,1 +1,1 @@
-package string2time
+package humantime

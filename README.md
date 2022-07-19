@@ -1,4 +1,4 @@
-# string2time
+# humantime
 Convert English strings related to time to Go time.TIme/Duration
 
 https://github.com/jinzhu/now

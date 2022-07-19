@@ -1,4 +1,4 @@
-module github.com/kmulvey/string2time
+module github.com/kmulvey/humantime
 
 go 1.18
 
