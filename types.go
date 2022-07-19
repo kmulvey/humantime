@@ -36,10 +36,10 @@ var DurationWords = map[string]time.Duration{
 	"days":    time.Hour * 24,
 	"week":    time.Hour * 24 * 7,
 	"weeks":   time.Hour * 24 * 7,
-	"month":   time.Hour * 24 * 7 * 30, // TODO 30 is probaby wrong here
-	"months":  time.Hour * 24 * 7 * 30, // TODO 30 is probaby wrong here
-	"year":    time.Second * 31536000,  // TODO 30 is probaby wrong here
-	"years":   time.Second * 31536000,  // TODO 30 is probaby wrong here
+	"month":   time.Hour * 24 * 7 * 30,
+	"months":  time.Hour * 24 * 7 * 30,
+	"year":    time.Second * 31536000,
+	"years":   time.Second * 31536000,
 }
 
 var DurationStringToMilli = map[string]int{

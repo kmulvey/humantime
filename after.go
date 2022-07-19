@@ -7,7 +7,7 @@ import (
 )
 
 // After takes a string starting with the word after
-// and parses the remainder as time.Duration, examples:
+// and parses the remainder as time.Time, examples:
 // after 3/15/2022
 // after May 8, 2009 5:57:51 PM
 // after 2am
@@ -19,7 +19,7 @@ func (st *Humantime) After(input string) (*TimeRange, error) {
 	tr.To = time.Now().In(st.Location)
 
 	if len(strings.Fields(input)) < 2 {
-		return nil, errors.New("input must have two fields")
+		return nil, errors.New("input must have at least two fields")
 	}
 	if !strings.HasPrefix(input, "after") {
 		return nil, errors.New("input does not start with 'after'")

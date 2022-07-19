@@ -92,6 +92,10 @@ func (st *Humantime) Parse(input string) (*TimeRange, error) {
 	return nil, nil
 }
 
+// parseTimeString reads phrases only containing time, examples:
+// 2am
+// 7pm
+// 04:12:43
 func (st *Humantime) parseTimeString(tr *TimeRange, input string) error {
 	if st.AMRegex.MatchString(input) {
 		var hourString = strings.ReplaceAll(input, "am", "")
@@ -139,6 +143,10 @@ func (st *Humantime) parseTimeString(tr *TimeRange, input string) error {
 	return errors.New("unable to parse date: " + input)
 }
 
+// parseDatePhrase parses dates, examples:
+// yesterday
+// May 8, 2009 5:57:51 PM
+// 3/15/2022
 func (st *Humantime) parseDatePhrase(input string) (time.Time, error) {
 	var tr = new(TimeRange)
 

@@ -5,10 +5,10 @@ import (
 	"strings"
 )
 
-// Ago takes a string starting with the word since
-// and parses the remainder as time.Duration, examples:
-// 3 hours ago
-// 8 days and three hours ago
+// FromTo takes a string in the format from [date phrase] to [date phrase]
+// and parses the remainder as time.Time, examples:
+// from yesterday to today
+// from May 8, 2009 5:57:51 PM to Sep 12, 2021 3:21:22 PM
 func (st *Humantime) FromTo(input string) (*TimeRange, error) {
 	var tr = new(TimeRange)
 

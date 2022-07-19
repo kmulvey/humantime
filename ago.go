@@ -9,7 +9,7 @@ import (
 )
 
 // Ago takes a string starting with the word since
-// and parses the remainder as time.Duration, examples:
+// and parses the remainder as time.Time, examples:
 // 3 hours ago
 // 8 days and three hours ago
 func (st *Humantime) Ago(input string) (*TimeRange, error) {
@@ -17,7 +17,10 @@ func (st *Humantime) Ago(input string) (*TimeRange, error) {
 
 	var inputArr = strings.Fields(input)
 	if len(inputArr) < 3 {
-		return tr, errors.New("input must have three fields")
+		return tr, errors.New("input must have at least three fields")
+	}
+	if !strings.HasSuffix(input, "ago") {
+		return nil, errors.New("input does not end with 'ago'")
 	}
 
 	var multiple, err = strconv.Atoi(inputArr[0])
