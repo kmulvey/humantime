@@ -11,9 +11,12 @@ type Humantime struct {
 	PMRegex        *regexp.Regexp
 	DateSlashRegex *regexp.Regexp
 	DateDashRegex  *regexp.Regexp
+	////////
+	AMOrPMRegex    *regexp.Regexp
 	ExactTimeRegex *regexp.Regexp
-	WeekdayRegex   *regexp.Regexp
 	SynonymRegex   *regexp.Regexp
+	AtTimeRegex    *regexp.Regexp
+	WeekdayRegex   *regexp.Regexp
 }
 
 type TimeRange struct {
@@ -26,8 +29,11 @@ const PM = `^\dpm`
 const DateSlash = `\d{1,2}/\d{1,2}/\d{2,4}`
 const DateDash = `\d{1,2}-\d{1,2}-\d{2,4}`
 const ExactTime = `\d{1,2}:\d{1,2}(:\d{1,2})?` // can detect optional seconds
-const Weekdays = `\b(next|last|this) ((mon|tues|wed(nes)?|thur(s)?|fri|sat(ur)?|sun)(day)?)\b`
-const Synonyms = `(yesterday|today|tomorrow)`
+// all text is passed through strings.ToLower() before these regexs are evaluated
+const AMOrPM = `(\d{1,2}am)|(\d{1,2}pm)`                                                      // one or two digits, followed by 'am' OR [same for pm]
+const Synonyms = `(yesterday|today|tomorrow)`                                                 // any of these three words
+const AtTime = `(at)?\s*(\d{1,2}am)|(at)?\s*(\d{1,2}pm)|(at)?\s*(\d{1,2}:\d{1,2}(:\d{1,2})?)` // [optional 'at'], any amout of spcace, one or two digits, 'am' OR [same for pm] OR [similar for 00:11:22]
+const Weekdays = `(next|last|this)\s*((mon|tues|wed(nes)?|thur(s)?|fri|sat(ur)?|sun)(day)?)`  // any of these three words, any amount of space, any day of the week with optional abbreviation
 
 var DurationWords = map[string]time.Duration{
 	"second":  time.Second,
@@ -79,4 +85,14 @@ var TimeSynonyms = map[string]func(*time.Location) time.Time{
 		var y, m, d = now.Date()
 		return time.Date(y, m, d, 0, 0, 0, 0, loc)
 	},
+}
+
+var StringToWeekdays = map[string]time.Weekday{
+	"monday":    time.Monday,
+	"tuesday":   time.Tuesday,
+	"webnesday": time.Wednesday,
+	"thursday":  time.Thursday,
+	"friday":    time.Friday,
+	"saturday":  time.Saturday,
+	"sunday":    time.Sunday,
 }
