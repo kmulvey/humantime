@@ -15,6 +15,14 @@ Convert English strings related to time to Go time.Time. This package also imple
   - yesterday
   - yesterday at [time phrase]
   - tomorrow at [time phrase]
+- Weekdays: "this tuesday", "last wednesday" ...
+  - Modifiers:
+    - "last" is the previous week
+    - "this" is this week, if today is wednesday and you input "this tuesday" it will return yesterday
+    - "next" the following week
+  - Day names:
+    - all days of the week are supported as full names: e.g. firday
+    - abbreviations are also supported: mon, tues,wed, thur, fri, sat, sun
 - A complete list of supported date formats can be found [here](https://github.com/araddon/dateparse#extended-example)
   - In addition to this list, "yesterday", "today" and "tomorrow" are also supported
   
