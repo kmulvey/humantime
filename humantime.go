@@ -65,13 +65,21 @@ func NewString2Time(loc *time.Location) (*Humantime, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", ExactTime, err)
 	}
+	st.SynonymRegex, err = regexp.Compile(Synonyms)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", Synonyms, err)
+	}
+	st.AtTimeRegex, err = regexp.Compile(AtTime)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", AtTime, err)
+	}
 	st.WeekdayRegex, err = regexp.Compile(Weekdays)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", Weekdays, err)
 	}
-	st.SynonymRegex, err = regexp.Compile(Synonyms)
+	st.AMOrPMRegex, err = regexp.Compile(AMOrPM)
 	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", Synonyms, err)
+		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", AMOrPM, err)
 	}
 
 	return st, nil
@@ -104,25 +112,23 @@ func (st *Humantime) Parse(input string) (*TimeRange, error) {
 // 2am
 // 7pm
 // 04:12:43
-func (st *Humantime) parseTimeString(tr *TimeRange, input string) error {
-	if st.AMRegex.MatchString(input) {
-		var hourString = strings.ReplaceAll(input, "am", "")
-		var hourNum, err = strconv.Atoi(hourString)
-		if err != nil {
-			return fmt.Errorf("error parsing time: %s, err: %w", input, err)
-		}
+func (st *Humantime) parseTimeString(timestamp time.Time, input string) (time.Time, error) {
+	input = strings.ReplaceAll(input, "at", "")
+	input = strings.TrimSpace(input)
 
-		tr.From = tr.From.Add(time.Duration(hourNum) * time.Hour)
-		return nil
-	} else if st.PMRegex.MatchString(input) {
-		var hourString = strings.ReplaceAll(input, "pm", "")
-		var hourNum, err = strconv.Atoi(hourString)
+	if result := st.AMOrPMRegex.FindString(input); result != "" {
+		var period = result[len(result)-2:]
+		var hourNum, err = strconv.Atoi(result[:len(result)-2])
 		if err != nil {
-			return fmt.Errorf("error parsing time: %s, err: %w", input, err)
+			return time.Time{}, fmt.Errorf("error parsing hour (%s) in: %s, err: %w", result[:len(result)-2], input, err)
 		}
-
-		tr.From = tr.From.Add(time.Duration(hourNum+12) * time.Hour)
-		return nil
+		if result == "12am" {
+			return timestamp, nil
+		} else if period == "am" || result == "12pm" { // have to check for noon
+			return timestamp.Add(time.Duration(hourNum) * time.Hour), nil
+		} else {
+			return timestamp.Add(time.Duration(hourNum+12) * time.Hour), nil
+		}
 	} else if st.ExactTimeRegex.MatchString(input) {
 		var timeArr = strings.Split(input, ":")
 
@@ -132,71 +138,83 @@ func (st *Humantime) parseTimeString(tr *TimeRange, input string) error {
 		var second int
 		hour, err = strconv.Atoi(strings.ReplaceAll(timeArr[0], ":", ""))
 		if err != nil {
-			return fmt.Errorf("error parsing time: %s, err: %w", input, err)
+			return time.Time{}, fmt.Errorf("error parsing hour in: %s, err: %w", input, err)
 		}
 		minute, err = strconv.Atoi(strings.ReplaceAll(timeArr[1], ":", ""))
 		if err != nil {
-			return fmt.Errorf("error parsing time: %s, err: %w", input, err)
+			return time.Time{}, fmt.Errorf("error parsing minute in: %s, err: %w", input, err)
 		}
 		if len(timeArr) == 3 {
 			second, err = strconv.Atoi(strings.ReplaceAll(timeArr[2], ":", ""))
 			if err != nil {
-				return fmt.Errorf("error parsing time: %s, err: %w", input, err)
+				return time.Time{}, fmt.Errorf("error parsing second in: %s, err: %w", input, err)
 			}
 		}
 
-		tr.From = tr.From.Add(time.Duration(hour) * time.Hour).Add(time.Duration(minute) * time.Minute).Add(time.Duration(second) * time.Second)
-		return nil
+		return timestamp.Add(time.Duration(hour) * time.Hour).Add(time.Duration(minute) * time.Minute).Add(time.Duration(second) * time.Second), nil
 	}
-	return errors.New("unable to parse date: " + input)
+	return time.Time{}, errors.New("unable to parse date: " + input)
 }
 
 // parseDatePhrase parses dates, examples:
 // yesterday
+// yesterday at 3pmp
 // May 8, 2009 5:57:51 PM
 // 3/15/2022
-func (st *Humantime) parseDatePhrase(input string) (time.Time, error) {
-	var tr = new(TimeRange)
+// next tuesday at 12am
+func (ht *Humantime) parseDatePhrase(input string) (time.Time, error) {
 
-	// is the whole thing a date?
-	if date, err := dateparse.ParseIn(input, st.Location, dateparse.RetryAmbiguousDateWithSwap(true)); err == nil {
+	if date, err := dateparse.ParseIn(input, ht.Location, dateparse.RetryAmbiguousDateWithSwap(true)); err == nil {
 		return date, nil
 	}
 
-	var nextEleIsTime bool
-	var inputArr = strings.Fields(input)
-	for i := 0; i < len(inputArr); i++ {
-		if nextEleIsTime {
-			var err = st.parseTimeString(tr, inputArr[i])
+	var inputCopy = strings.TrimSpace(input) // so we can use the original in errors
+	var now = time.Now().In(ht.Location)
+	var nilTime = time.Time{} // used for if() testing
+	var timestamp time.Time   // this is the return val that we incrementally add to each time through the loop
+	var i int                 // count iterations to prevent infinitly looping
+	for inputCopy != "" {
+		if result := ht.WeekdayRegex.FindString(inputCopy); result != "" {
+			var resultArr = strings.Fields(result)
+			if len(resultArr) != 2 {
+				return time.Time{}, fmt.Errorf("could not parse weekday: %s in input: %s", resultArr[1], input)
+			}
+
+			var weekday, found = StringToWeekdays[resultArr[1]]
+			if !found {
+				return time.Time{}, fmt.Errorf("could not parse weekday: %s in input: %s", resultArr[1], input)
+			}
+
+			if resultArr[0] == "last" {
+				timestamp = time.Date(now.Year(), now.Month(), now.Day()-int(now.Weekday()-weekday)-7, 0, 0, 0, 0, ht.Location)
+			} else if resultArr[0] == "this" {
+				timestamp = time.Date(now.Year(), now.Month(), now.Day()-int(now.Weekday()-weekday), 0, 0, 0, 0, ht.Location)
+			} else if resultArr[0] == "next" {
+				timestamp = time.Date(now.Year(), now.Month(), now.Day()-int(now.Weekday()-weekday)+7, 0, 0, 0, 0, ht.Location)
+			} else {
+				return time.Time{}, fmt.Errorf("could not parse weekday: %s in input: %s", resultArr[1], input)
+			}
+
+			inputCopy = strings.Replace(inputCopy, result, "", 1)
+		} else if result := ht.SynonymRegex.FindString(inputCopy); result != "" {
+			var syn, _ = TimeSynonyms[result] // ignore second return val as how could it not be found?
+			inputCopy = strings.Replace(inputCopy, result, "", 1)
+			timestamp = syn(ht.Location)
+		} else if result := ht.AtTimeRegex.FindString(inputCopy); result != "" {
+			var err error
+			if timestamp == nilTime { // no day specified, assume today e.g. "3pm"
+				timestamp = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, ht.Location)
+			}
+			timestamp, err = ht.parseTimeString(timestamp, result)
 			if err != nil {
 				return time.Time{}, err
 			}
-			return tr.From, nil
-		} else if syn, found := TimeSynonyms[inputArr[i]]; found {
-			tr.From = syn(st.Location)
-		} else if inputArr[i] == "at" {
-			nextEleIsTime = true
-		} else if len(inputArr) == 1 {
-			// this block is time only and assumes the time is for today e.g. "2am"
-			var now = time.Now().In(st.Location)
-			tr.From = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, st.Location)
-			var err = st.parseTimeString(tr, inputArr[i])
-			if err != nil {
-				return time.Time{}, err
-			}
-			return tr.From, nil
+			inputCopy = strings.Replace(inputCopy, result, "", 1)
+		} else if i == 5 { // catch all so we dont loop forever
+			return time.Time{}, fmt.Errorf("could not parse %s", input)
 		}
+		inputCopy = strings.TrimSpace(inputCopy)
+		i++
 	}
-
-	return tr.From, nil
+	return timestamp, nil
 }
-
-/*
-	var now = time.Now()
-	fmt.Println(now)
-	var today = float64(now.Weekday())
-	var friday = float64(time.Friday)
-	fmt.Println(now.Weekday() - time.Friday)
-	fmt.Println(math.Abs(today - friday))
-	fmt.Println(now.AddDate(0, 0, int(math.Abs(today-friday))))
-*/
