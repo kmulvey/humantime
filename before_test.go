@@ -43,4 +43,9 @@ func TestBefore(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, now.Round(time.Second), result.From.Round(time.Second))
 	assert.Equal(t, time.Date(now.Year(), now.Month(), now.Day(), 14, 00, 00, 0, now.Location()), result.To)
+
+	result, err = st.Before("before next tuesday at 05:23:43")
+	assert.NoError(t, err)
+	assert.Equal(t, now.Round(time.Second), result.From.Round(time.Second))
+	assert.Equal(t, time.Date(now.Year(), now.Month(), today.Day()-int(today.Weekday()-time.Tuesday)+7, 5, 23, 43, 0, now.Location()), result.To)
 }
