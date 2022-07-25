@@ -95,7 +95,7 @@ func (st *Humantime) Parse(input string) (*TimeRange, error) {
 // parseTimeString reads phrases only containing time, examples:
 // 2am
 // 7pm
-// 04:12:43
+// 04:12:43 -- this format assumes 24h i.e. no a/pm
 func (st *Humantime) parseTimeString(timestamp time.Time, input string) (time.Time, error) {
 	input = strings.ReplaceAll(input, "at", "")
 	input = strings.TrimSpace(input)
@@ -106,7 +106,10 @@ func (st *Humantime) parseTimeString(timestamp time.Time, input string) (time.Ti
 		if err != nil {
 			return time.Time{}, fmt.Errorf("error parsing hour (%s) in: %s, err: %w", result[:len(result)-2], input, err)
 		}
-		if result == "12am" {
+
+		if hourNum > 12 {
+			return time.Time{}, fmt.Errorf("error parsing hour (%d) in: %s, err: hour cannot be > 12", hourNum, input)
+		} else if result == "12am" {
 			return timestamp, nil
 		} else if period == "am" || result == "12pm" { // have to check for noon
 			return timestamp.Add(time.Duration(hourNum) * time.Hour), nil
@@ -123,15 +126,22 @@ func (st *Humantime) parseTimeString(timestamp time.Time, input string) (time.Ti
 		hour, err = strconv.Atoi(strings.ReplaceAll(timeArr[0], ":", ""))
 		if err != nil {
 			return time.Time{}, fmt.Errorf("error parsing hour in: %s, err: %w", input, err)
+		} else if hour > 23 {
+			return time.Time{}, fmt.Errorf("error parsing hour (%d) in: %s, err: hour cannot be > 23", hour, input)
 		}
+
 		minute, err = strconv.Atoi(strings.ReplaceAll(timeArr[1], ":", ""))
 		if err != nil {
 			return time.Time{}, fmt.Errorf("error parsing minute in: %s, err: %w", input, err)
+		} else if minute > 59 {
+			return time.Time{}, fmt.Errorf("error parsing minute (%d) in: %s, err: minute cannot be > 59", minute, input)
 		}
 		if len(timeArr) == 3 {
 			second, err = strconv.Atoi(strings.ReplaceAll(timeArr[2], ":", ""))
 			if err != nil {
 				return time.Time{}, fmt.Errorf("error parsing second in: %s, err: %w", input, err)
+			} else if second > 59 {
+				return time.Time{}, fmt.Errorf("error parsing second (%d) in: %s, err: second cannot be > 59", second, input)
 			}
 		}
 
