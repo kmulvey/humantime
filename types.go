@@ -7,11 +7,6 @@ import (
 
 type Humantime struct {
 	*time.Location
-	AMRegex        *regexp.Regexp
-	PMRegex        *regexp.Regexp
-	DateSlashRegex *regexp.Regexp
-	DateDashRegex  *regexp.Regexp
-	////////
 	AMOrPMRegex    *regexp.Regexp
 	ExactTimeRegex *regexp.Regexp
 	SynonymRegex   *regexp.Regexp
@@ -24,12 +19,8 @@ type TimeRange struct {
 	To   time.Time
 }
 
-const AM = `^\dam`
-const PM = `^\dpm`
-const DateSlash = `\d{1,2}/\d{1,2}/\d{2,4}`
-const DateDash = `\d{1,2}-\d{1,2}-\d{2,4}`
-const ExactTime = `\d{1,2}:\d{1,2}(:\d{1,2})?` // can detect optional seconds
 // all text is passed through strings.ToLower() before these regexs are evaluated
+const ExactTime = `\d{1,2}:\d{1,2}(:\d{1,2})?`                                                // one or two digits, ':', one or two digits, optional: [':' one or two digits]
 const AMOrPM = `(\d{1,2}am)|(\d{1,2}pm)`                                                      // one or two digits, followed by 'am' OR [same for pm]
 const Synonyms = `(yesterday|today|tomorrow)`                                                 // any of these three words
 const AtTime = `(at)?\s*(\d{1,2}am)|(at)?\s*(\d{1,2}pm)|(at)?\s*(\d{1,2}:\d{1,2}(:\d{1,2})?)` // [optional 'at'], any amout of spcace, one or two digits, 'am' OR [same for pm] OR [similar for 00:11:22]

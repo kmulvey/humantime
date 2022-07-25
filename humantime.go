@@ -45,22 +45,6 @@ func NewString2Time(loc *time.Location) (*Humantime, error) {
 	st.Location = loc
 
 	// init regexs
-	st.AMRegex, err = regexp.Compile(AM)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", AM, err)
-	}
-	st.PMRegex, err = regexp.Compile(PM)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", PM, err)
-	}
-	st.DateSlashRegex, err = regexp.Compile(DateSlash)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", DateSlash, err)
-	}
-	st.DateDashRegex, err = regexp.Compile(DateDash)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", DateDash, err)
-	}
 	st.ExactTimeRegex, err = regexp.Compile(ExactTime)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", ExactTime, err)
