@@ -4,12 +4,17 @@
 Convert English strings related to time to Go time.Time. This package also implements the [flags.Value](https://pkg.go.dev/flag#Value) and [flag.Getter](https://pkg.go.dev/flag#Getter) interfaces for use in a cli context.
 
 ## Nomenclature
+- A "time phrase" is text that represents just time, examples:
+  - at 4pm
+  - 3am
+  - 12:03:33 // the colon format assumes 24h (no am or pm allowed)
+  - 3:4:3 // interperted as 03:04:03
 - A "date phrase" is text that represents a date and optionally time, examples:
   - May 8, 2009 5:57:51 PM
   - 3/15/2022
   - yesterday
-  - yesterday at 4pm
-  - tomorrow at 13:34:32
+  - yesterday at [time phrase]
+  - tomorrow at [time phrase]
 - A complete list of supported date formats can be found [here](https://github.com/araddon/dateparse#extended-example)
   - In addition to this list, "yesterday", "today" and "tomorrow" are also supported
   
