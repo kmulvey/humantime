@@ -1,7 +1,7 @@
 # humantime
 [![humantime](https://github.com/kmulvey/humantime/actions/workflows/release_build.yml/badge.svg)](https://github.com/kmulvey/humantime/actions/workflows/release_build.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/kmulvey/humantime)](https://goreportcard.com/report/github.com/kmulvey/humantime) [![Go Reference](https://pkg.go.dev/badge/github.com/kmulvey/humantime.svg)](https://pkg.go.dev/github.com/kmulvey/humantime)
 
-Convert English strings related to time to Go time.Time. This package also implements the [flags.Value](https://pkg.go.dev/flag#Value) and [flag.Getter](https://pkg.go.dev/flag#Getter) interfaces for use in a cli context.
+Convert English strings related to time to Go time.Time. This package also implements the [flags.Value](https://pkg.go.dev/flag#Value) and [flag.Getter](https://pkg.go.dev/flag#Getter) interfaces for use in a cli context as well.
 
 ## Nomenclature
 - A "time phrase" is text that represents just time, examples:
