@@ -34,10 +34,13 @@ Convert English strings related to time to Go time.Time. This package also imple
   - [date phrase] ago
   - from [date phrase] to [date phrase]
  
-## Example phrases
+## Example phrases 
   - from May 8, 2009 5:57:51 PM to Sep 12, 2021 3:21:22 PM
   - 3 days ago
   - after yesterday at 4pm
+  - last thursday at 2am
+  - next friday at 02:23:34
+  - (more in tests)
 
 ## Usage
   [CLI flag example](https://github.com/kmulvey/humantime/blob/main/cmd/main.go)
