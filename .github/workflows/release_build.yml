@@ -32,8 +32,11 @@ jobs:
           go mod tidy
           go test -v -race -count 1 -parallel 5 -coverprofile=profile.cov ./...
           go build -v -ldflags="-s -w" ./...
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          path-to-lcov: profile.cov
-          github-token: ${{ secrets.GH_SECRET_TOKEN }}
+      
+      - name: Install goveralls
+        run: go install github.com/mattn/goveralls@latest
+      
+      - name: Send coverage
+        env:
+          COVERALLS_TOKEN: ${{ secrets.GH_SECRET_TOKEN }}
+        run: goveralls -coverprofile=covprofile -service=github
