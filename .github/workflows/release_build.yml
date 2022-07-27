@@ -38,6 +38,5 @@ jobs:
       
       - name: Send coverage
         env:
-          COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
-        run: echo ${{ secrets.COVERALLS_TOKEN }}
-        run: goveralls -repotoken WhrcQRlWzCRgFmXr61pXE3nhdLWtEnpUl -coverprofile=covprofile -service=github -reponame github/kmulvey/humantime -debug
+          COVERALLS_TOKEN: ${{ secrets.GH_SECRET_TOKEN }}
+        run: goveralls -coverprofile=covprofile -service=github -reponame github/kmulvey/humantime -debug
