@@ -16,7 +16,6 @@ import (
 // 1 year 2 months 3 days 4 hours 5 minutes 6 seconds ago
 func (st *Humantime) Ago(input string) (*TimeRange, error) {
 	var tr = new(TimeRange)
-	var inputCopy = input
 
 	// lint the input
 	if len(strings.Fields(input)) < 3 {
@@ -27,7 +26,7 @@ func (st *Humantime) Ago(input string) (*TimeRange, error) {
 	}
 
 	// remove stop words
-	inputCopy = strings.ReplaceAll(input, "ago", "")
+	var inputCopy = strings.ReplaceAll(input, "ago", "")
 	inputCopy = strings.ReplaceAll(inputCopy, "and", "")
 	inputCopy = strings.ReplaceAll(inputCopy, ",", "")
 	inputCopy = strings.TrimSpace(inputCopy)
