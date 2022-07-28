@@ -1,7 +1,7 @@
 package humantime
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -19,10 +19,10 @@ func (st *Humantime) Since(input string) (*TimeRange, error) {
 	tr.To = time.Now().In(st.Location)
 
 	if len(strings.Fields(input)) < 2 {
-		return nil, errors.New("input must have at least two fields")
+		return nil, fmt.Errorf("input must have at least two fields: %s", input)
 	}
 	if !strings.HasPrefix(input, "since") {
-		return nil, errors.New("input does not start with 'since'")
+		return nil, fmt.Errorf("input does not start with 'since': %s", input)
 	}
 
 	var err error
