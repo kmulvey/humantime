@@ -1,7 +1,7 @@
 package humantime
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -19,10 +19,10 @@ func (st *Humantime) Until(input string) (*TimeRange, error) {
 	tr.From = time.Now().In(st.Location)
 
 	if len(strings.Fields(input)) < 2 {
-		return nil, errors.New("input must have at least two fields")
+		return nil, fmt.Errorf("input must have at least two fields: %s", input)
 	}
 	if !strings.HasPrefix(input, "until") {
-		return nil, errors.New("input does not start with 'until'")
+		return nil, fmt.Errorf("input does not start with 'until': %s", input)
 	}
 
 	var err error
