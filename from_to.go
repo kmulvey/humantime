@@ -15,7 +15,7 @@ func (st *Humantime) FromTo(input string) (*TimeRange, error) {
 	if !strings.HasPrefix(input, "from ") {
 		return nil, fmt.Errorf("first arg must be 'from': %s", input)
 	}
-	if !strings.Contains(input, " to ") {
+	if !strings.Contains(input, " to") {
 		return nil, fmt.Errorf("input must contain 'to': %s", input)
 	}
 

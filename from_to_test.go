@@ -47,4 +47,12 @@ func TestFromTo(t *testing.T) {
 	result, err = st.FromTo("from yesterday to no")
 	assert.Equal(t, "error parsingDatePhrase: could not parse no", err.Error())
 	assert.Nil(t, result)
+
+	result, err = st.FromTo("from yesterday to")
+	assert.Equal(t, "input must contain ' to ': from yesterday to", err.Error())
+	assert.Nil(t, result)
+
+	result, err = st.FromTo("from nope to tomorrow")
+	assert.Equal(t, "error parsingDatePhrase: could not parse nope", err.Error())
+	assert.Nil(t, result)
 }
