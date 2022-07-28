@@ -21,18 +21,18 @@ func (st *Humantime) FromTo(input string) (*TimeRange, error) {
 
 	var fromDateStr, toDateStr, found = strings.Cut(strings.ReplaceAll(input, "from ", ""), " to ")
 	if !found {
-		return nil, fmt.Errorf("input must contain 'to': %s", input)
+		return nil, fmt.Errorf("input must contain ' to ': %s", input)
 	}
 
 	var err error
 	tr.From, err = st.parseDatePhrase(fromDateStr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsingDatePhrase: %w", err)
 	}
 
 	tr.To, err = st.parseDatePhrase(toDateStr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsingDatePhrase: %w", err)
 	}
 
 	return tr, nil
