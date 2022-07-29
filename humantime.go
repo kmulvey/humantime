@@ -22,8 +22,14 @@ func (v *TimeRange) Get() TimeRange {
 }
 
 // Set fulfils the flag.Value interface https://pkg.go.dev/flag#Value
-func (v *TimeRange) Set(s, loc string) error {
-	location, err := time.LoadLocation(loc)
+// must end in the format " in [timezone]" e.g. "3pm in America/New_York"
+func (v *TimeRange) Set(s string) error {
+	var inputArr = strings.Fields(s)
+	if len(inputArr) < 3 {
+		return fmt.Errorf("input must have at least three fields: %s", s)
+	}
+
+	location, err := time.LoadLocation(inputArr[len(inputArr)-1])
 	if err != nil {
 		return err
 	}
@@ -32,6 +38,9 @@ func (v *TimeRange) Set(s, loc string) error {
 	if err != nil {
 		return err
 	}
+
+	// remove the zone
+	s = s[:strings.Index(s, " in ")]
 
 	if r, err := st.Parse(s); err != nil {
 		return err

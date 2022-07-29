@@ -93,13 +93,13 @@ func TestCLI(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "From: 01 Jan 21 00:00 MST, To: 02 Feb 22 00:00 MST", result.String())
 
-	err = result.Set("from 1/1/2001 to 2/2/2002", "America/NoExist")
+	err = result.Set("from 1/1/2001 to 2/2/2002 in America/NoExist")
 	assert.Equal(t, "unknown time zone America/NoExist", err.Error())
 
-	err = result.Set("from 1 to 2", "America/Denver")
+	err = result.Set("from 1 to 2 in America/Denver")
 	assert.Equal(t, "error parsingDatePhrase: could not parse 1", err.Error())
 
-	err = result.Set("from 1/1/2001 to 2/2/2002", "America/Denver")
+	err = result.Set("from 1/1/2001 to 2/2/2002 in America/Denver")
 	assert.NoError(t, err)
 
 	var v = result.Get()
@@ -112,7 +112,6 @@ func TestCLI(t *testing.T) {
 func TestParse(t *testing.T) {
 	t.Parallel()
 
-	var now = time.Now()
 	var st, err = NewString2Time(today.Location())
 	assert.NoError(t, err)
 
@@ -122,7 +121,7 @@ func TestParse(t *testing.T) {
 
 	result, err = st.Parse("2 days ago")
 	assert.NoError(t, err)
-	assert.Equal(t, time.Date(today.Year(), today.Month(), today.Day()-2, now.Hour(), 0, 0, 0, today.Location()).Round(time.Hour), result.From.Round(time.Hour))
+	assert.Equal(t, today.Day()-2, result.From.Day())
 
 	result, err = st.Parse("til 3/15/2026 at 00:00:00")
 	assert.NoError(t, err)
