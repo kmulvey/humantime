@@ -21,11 +21,13 @@ func (st *Humantime) Until(input string) (*TimeRange, error) {
 	if len(strings.Fields(input)) < 2 {
 		return nil, fmt.Errorf("input must have at least two fields: %s", input)
 	}
-	if !strings.HasPrefix(input, "until") {
+	if !strings.HasPrefix(input, "until") && !strings.HasPrefix(input, "til") {
 		return nil, fmt.Errorf("input does not start with 'until': %s", input)
 	}
+	input = strings.ReplaceAll(input, "until ", "")
+	input = strings.ReplaceAll(input, "til ", "")
 
 	var err error
-	tr.To, err = st.parseDatePhrase(strings.ReplaceAll(input, "until ", ""))
+	tr.To, err = st.parseDatePhrase(input)
 	return tr, err
 }

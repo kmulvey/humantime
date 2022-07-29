@@ -82,3 +82,61 @@ func TestParseDatePhrase(t *testing.T) {
 	assert.Equal(t, "unable to parse date: next tomorrow", err.Error())
 	assert.Equal(t, time.Time{}, result)
 }
+
+func TestCLI(t *testing.T) {
+	t.Parallel()
+
+	var st, err = NewString2Time(today.Location())
+	assert.NoError(t, err)
+
+	result, err := st.FromTo("from 1/1/2021 to 2/2/2022")
+	assert.NoError(t, err)
+	assert.Equal(t, "From: 01 Jan 21 00:00 MST, To: 02 Feb 22 00:00 MST", result.String())
+
+	err = result.Set("from 1/1/2001 to 2/2/2002", "America/NoExist")
+	assert.Equal(t, "unknown time zone America/NoExist", err.Error())
+
+	err = result.Set("from 1 to 2", "America/Denver")
+	assert.Equal(t, "error parsingDatePhrase: could not parse 1", err.Error())
+
+	err = result.Set("from 1/1/2001 to 2/2/2002", "America/Denver")
+	assert.NoError(t, err)
+
+	var v = result.Get()
+	location, err := time.LoadLocation("America/Denver")
+	assert.NoError(t, err)
+	assert.Equal(t, time.Date(2001, time.January, 1, 0, 0, 0, 0, location), v.From.Round(time.Minute))
+	assert.Equal(t, time.Date(2002, time.February, 2, 0, 0, 0, 0, location), v.To.Round(time.Minute))
+}
+
+func TestParse(t *testing.T) {
+	t.Parallel()
+
+	var now = time.Now()
+	var st, err = NewString2Time(today.Location())
+	assert.NoError(t, err)
+
+	result, err := st.Parse("since yesterday")
+	assert.NoError(t, err)
+	assert.Equal(t, time.Date(today.Year(), today.Month(), today.Day()-1, 0, 0, 0, 0, today.Location()), result.From)
+
+	result, err = st.Parse("2 days ago")
+	assert.NoError(t, err)
+	assert.Equal(t, time.Date(today.Year(), today.Month(), today.Day()-2, now.Hour(), 0, 0, 0, today.Location()).Round(time.Hour), result.From.Round(time.Hour))
+
+	result, err = st.Parse("til 3/15/2026 at 00:00:00")
+	assert.NoError(t, err)
+	assert.Equal(t, time.Date(2026, time.Month(3), 15, 0, 0, 0, 0, today.Location()), result.To)
+
+	result, err = st.Parse("before 3/15/2026 at 00:00:00")
+	assert.NoError(t, err)
+	assert.Equal(t, time.Date(2026, time.Month(3), 15, 0, 0, 0, 0, today.Location()), result.To)
+
+	result, err = st.Parse("after 3/15/2006 at 00:00:00")
+	assert.NoError(t, err)
+	assert.Equal(t, time.Date(2006, time.Month(3), 15, 0, 0, 0, 0, today.Location()), result.From)
+
+	result, err = st.Parse("apples")
+	assert.Equal(t, "unsupported format: apples", err.Error())
+	assert.Nil(t, result)
+}

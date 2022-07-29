@@ -17,13 +17,18 @@ func (v TimeRange) String() string {
 }
 
 // Get fulfils the flag.Getter interface https://pkg.go.dev/flag#Getter
-func (v *TimeRange) Get(s string) TimeRange {
+func (v *TimeRange) Get() TimeRange {
 	return *v
 }
 
 // Set fulfils the flag.Value interface https://pkg.go.dev/flag#Value
-func (v *TimeRange) Set(s string) error {
-	var st, err = NewString2Time(time.UTC) // TODO not always utc
+func (v *TimeRange) Set(s, loc string) error {
+	location, err := time.LoadLocation(loc)
+	if err != nil {
+		return err
+	}
+
+	st, err := NewString2Time(location)
 	if err != nil {
 		return err
 	}
@@ -89,7 +94,7 @@ func (st *Humantime) Parse(input string) (*TimeRange, error) {
 		return st.FromTo(input)
 	}
 
-	return nil, nil
+	return nil, fmt.Errorf("unsupported format: %s", input)
 }
 
 // parseTimeString reads phrases only containing time, examples:
