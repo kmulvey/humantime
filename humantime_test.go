@@ -86,12 +86,12 @@ func TestParseDatePhrase(t *testing.T) {
 func TestCLI(t *testing.T) {
 	t.Parallel()
 
-	var st, err = NewString2Time(today.Location())
+	var st, err = NewString2Time(time.UTC)
 	assert.NoError(t, err)
 
 	result, err := st.FromTo("from 1/1/2021 to 2/2/2022")
 	assert.NoError(t, err)
-	assert.Equal(t, "From: 01 Jan 21 00:00 MST, To: 02 Feb 22 00:00 MST", result.String())
+	assert.Equal(t, "From: 01 Jan 21 00:00 UTC, To: 02 Feb 22 00:00 UTC", result.String())
 
 	err = result.Set("from 1/1/2001 to 2/2/2002 in America/NoExist")
 	assert.Equal(t, "unknown time zone America/NoExist", err.Error())
