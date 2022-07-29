@@ -78,8 +78,8 @@ func TestParseDatePhrase(t *testing.T) {
 	}
 
 	// error cases
-	result, err := st.parseTimeString(today, "next tomorrow")
-	assert.Equal(t, "unable to parse date: next tomorrow", err.Error())
+	result, err := st.parseDatePhrase("next tomorrow")
+	assert.Equal(t, "could not parse next tomorrow", err.Error())
 	assert.Equal(t, time.Time{}, result)
 }
 
@@ -98,6 +98,9 @@ func TestCLI(t *testing.T) {
 
 	err = result.Set("from 1 to 2 in America/Denver")
 	assert.Equal(t, "error parsingDatePhrase: could not parse 1", err.Error())
+
+	err = result.Set("from ")
+	assert.Equal(t, "input must have at least three fields: from ", err.Error())
 
 	err = result.Set("from 1/1/2001 to 2/2/2002 in America/Denver")
 	assert.NoError(t, err)
