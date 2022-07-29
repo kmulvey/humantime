@@ -29,18 +29,20 @@ func (v *TimeRange) Set(s string) error {
 		return fmt.Errorf("input must have at least three fields: %s", s)
 	}
 
-	location, err := time.LoadLocation(inputArr[len(inputArr)-1])
-	if err != nil {
-		return err
+	var location = time.Local
+	var err error
+	if strings.Contains(s, " in ") {
+		location, err = time.LoadLocation(inputArr[len(inputArr)-1])
+		if err != nil {
+			return err
+		}
+		s = s[:strings.Index(s, " in ")]
 	}
 
 	st, err := NewString2Time(location)
 	if err != nil {
 		return err
 	}
-
-	// remove the zone
-	s = s[:strings.Index(s, " in ")]
 
 	if r, err := st.Parse(s); err != nil {
 		return err
