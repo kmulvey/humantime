@@ -124,7 +124,7 @@ func TestParse(t *testing.T) {
 
 	result, err = st.Parse("2 days ago")
 	assert.NoError(t, err)
-	assert.Equal(t, today.Day()-2, result.From.Day())
+	assert.Equal(t, time.Date(today.Year(), today.Month(), today.Day()-2, 0, 0, 0, 0, today.Location()).Day(), result.From.Day())
 
 	result, err = st.Parse("til 3/15/2026 at 00:00:00")
 	assert.NoError(t, err)
