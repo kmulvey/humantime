@@ -61,25 +61,25 @@ func NewString2Time(loc *time.Location) (*Humantime, error) {
 	st.Location = loc
 
 	// init regexs
-	st.ExactTimeRegex, err = regexp.Compile(ExactTime)
+	st.ExactTimeRegex, err = regexp.Compile(exactTime)
 	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", ExactTime, err)
+		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", exactTime, err)
 	}
-	st.SynonymRegex, err = regexp.Compile(Synonyms)
+	st.SynonymRegex, err = regexp.Compile(synonyms)
 	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", Synonyms, err)
+		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", synonyms, err)
 	}
-	st.AtTimeRegex, err = regexp.Compile(AtTime)
+	st.AtTimeRegex, err = regexp.Compile(atTime)
 	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", AtTime, err)
+		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", atTime, err)
 	}
-	st.WeekdayRegex, err = regexp.Compile(Weekdays)
+	st.WeekdayRegex, err = regexp.Compile(weekdays)
 	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", Weekdays, err)
+		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", weekdays, err)
 	}
-	st.AMOrPMRegex, err = regexp.Compile(AMOrPM)
+	st.AMOrPMRegex, err = regexp.Compile(amORpm)
 	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", AMOrPM, err)
+		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", amORpm, err)
 	}
 
 	return st, nil

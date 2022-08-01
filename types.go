@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Humantime facilitates converting time in English words to a time.Time type
 type Humantime struct {
 	*time.Location
 	AMOrPMRegex    *regexp.Regexp
@@ -14,18 +15,20 @@ type Humantime struct {
 	WeekdayRegex   *regexp.Regexp
 }
 
+// TimeRange is the return type of this package
 type TimeRange struct {
 	From time.Time
 	To   time.Time
 }
 
 // all text is passed through strings.ToLower() before these regexs are evaluated
-const ExactTime = `\d{1,2}:\d{1,2}(:\d{1,2})?`                                                // one or two digits, ':', one or two digits, optional: [':' one or two digits]
-const AMOrPM = `(\d{1,2}am)|(\d{1,2}pm)`                                                      // one or two digits, followed by 'am' OR [same for pm]
-const Synonyms = `(yesterday|today|tomorrow)`                                                 // any of these three words
-const AtTime = `(at)?\s*(\d{1,2}am)|(at)?\s*(\d{1,2}pm)|(at)?\s*(\d{1,2}:\d{1,2}(:\d{1,2})?)` // [optional 'at'], any amout of spcace, one or two digits, 'am' OR [same for pm] OR [similar for 00:11:22]
-const Weekdays = `(next|last|this)\s*((mon|tues|wed(nes)?|thur(s)?|fri|sat(ur)?|sun)(day)?)`  // any of these three words, any amount of space, any day of the week with optional abbreviation
+const exactTime = `\d{1,2}:\d{1,2}(:\d{1,2})?`                                                // one or two digits, ':', one or two digits, optional: [':' one or two digits]
+const amORpm = `(\d{1,2}am)|(\d{1,2}pm)`                                                      // one or two digits, followed by 'am' OR [same for pm]
+const synonyms = `(yesterday|today|tomorrow)`                                                 // any of these three words
+const atTime = `(at)?\s*(\d{1,2}am)|(at)?\s*(\d{1,2}pm)|(at)?\s*(\d{1,2}:\d{1,2}(:\d{1,2})?)` // [optional 'at'], any amout of spcace, one or two digits, 'am' OR [same for pm] OR [similar for 00:11:22]
+const weekdays = `(next|last|this)\s*((mon|tues|wed(nes)?|thur(s)?|fri|sat(ur)?|sun)(day)?)`  // any of these three words, any amount of space, any day of the week with optional abbreviation
 
+// DurationWords turns word durations into time.Duration
 var DurationWords = map[string]time.Duration{
 	"second":  time.Second,
 	"seconds": time.Second,
@@ -43,23 +46,7 @@ var DurationWords = map[string]time.Duration{
 	"years":   time.Second * 31536000,
 }
 
-var DurationStringToMilli = map[string]int{
-	"second":  time.Now().Second(),
-	"seconds": time.Now().Second(),
-	"minute":  time.Now().Minute(),
-	"minutes": time.Now().Minute(),
-	"hour":    time.Now().Hour(),
-	"hours":   time.Now().Hour(),
-	"day":     time.Now().Day(),
-	"days":    time.Now().Day(),
-	"week":    time.Now().Day() * 7,
-	"weeks":   time.Now().Day() * 7,
-	"month":   int(time.Now().Month()),
-	"months":  int(time.Now().Month()),
-	"year":    time.Now().Year(),
-	"years":   time.Now().Year(),
-}
-
+// TimeSynonyms maps relative time words to time.Time based on the current wall time
 var TimeSynonyms = map[string]func(*time.Location) time.Time{
 	"yesterday": func(loc *time.Location) time.Time {
 		var now = time.Now().Add(time.Hour * -24)
@@ -78,6 +65,7 @@ var TimeSynonyms = map[string]func(*time.Location) time.Time{
 	},
 }
 
+// StringToWeekdays maps words to their time.Weekday counterparts
 var StringToWeekdays = map[string]time.Weekday{
 	"monday":    time.Monday,
 	"tuesday":   time.Tuesday,
