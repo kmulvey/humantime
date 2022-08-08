@@ -31,12 +31,12 @@ func (v *TimeRange) Set(s string) error {
 
 	var location = time.Local
 	var err error
-	if strings.Contains(s, " in ") {
+	if index := strings.Index(s, " in "); index > -1 {
 		location, err = time.LoadLocation(inputArr[len(inputArr)-1])
 		if err != nil {
 			return err
 		}
-		s = s[:strings.Index(s, " in ")]
+		s = s[:index]
 	}
 
 	st, err := NewString2Time(location)
@@ -56,31 +56,15 @@ func (v *TimeRange) Set(s string) error {
 // NewString2Time is just a constructor
 func NewString2Time(loc *time.Location) (*Humantime, error) {
 
-	var err error
 	var st = new(Humantime)
 	st.Location = loc
 
 	// init regexs
-	st.ExactTimeRegex, err = regexp.Compile(exactTime)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", exactTime, err)
-	}
-	st.SynonymRegex, err = regexp.Compile(synonyms)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", synonyms, err)
-	}
-	st.AtTimeRegex, err = regexp.Compile(atTime)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", atTime, err)
-	}
-	st.WeekdayRegex, err = regexp.Compile(weekdays)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", weekdays, err)
-	}
-	st.AMOrPMRegex, err = regexp.Compile(amORpm)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compile regex: %s, err: %w", amORpm, err)
-	}
+	st.ExactTimeRegex = regexp.MustCompile(exactTime)
+	st.SynonymRegex = regexp.MustCompile(synonyms)
+	st.AtTimeRegex = regexp.MustCompile(atTime)
+	st.WeekdayRegex = regexp.MustCompile(weekdays)
+	st.AMOrPMRegex = regexp.MustCompile(amORpm)
 
 	return st, nil
 }
@@ -91,17 +75,18 @@ func (st *Humantime) Parse(input string) (*TimeRange, error) {
 
 	input = strings.ToLower(input)
 
-	if strings.Contains(input, "since") {
+	switch {
+	case strings.Contains(input, "since"):
 		return st.Since(input)
-	} else if strings.Contains(input, "ago") {
+	case strings.Contains(input, "ago"):
 		return st.Ago(input)
-	} else if strings.Contains(input, "til") {
+	case strings.Contains(input, "til"):
 		return st.Until(input)
-	} else if strings.Contains(input, "before") {
+	case strings.Contains(input, "before"):
 		return st.Before(input)
-	} else if strings.Contains(input, "after") {
+	case strings.Contains(input, "after"):
 		return st.After(input)
-	} else if strings.Contains(input, "from") && strings.Contains(input, "to") {
+	case strings.Contains(input, "from") && strings.Contains(input, "to"):
 		return st.FromTo(input)
 	}
 
@@ -123,15 +108,17 @@ func (st *Humantime) parseTimeString(timestamp time.Time, input string) (time.Ti
 			return time.Time{}, fmt.Errorf("error parsing hour (%s) in: %s, err: %w", result[:len(result)-2], input, err)
 		}
 
-		if hourNum > 12 {
+		switch {
+		case hourNum > 12:
 			return time.Time{}, fmt.Errorf("error parsing hour (%d) in: %s, err: hour cannot be > 12", hourNum, input)
-		} else if result == "12am" {
+		case result == "12am":
 			return timestamp, nil
-		} else if period == "am" || result == "12pm" { // have to check for noon
+		case period == "am" || result == "12pm": // have to check for noon
 			return timestamp.Add(time.Duration(hourNum) * time.Hour), nil
-		} else {
+		default:
 			return timestamp.Add(time.Duration(hourNum+12) * time.Hour), nil
 		}
+
 	} else if st.ExactTimeRegex.MatchString(input) {
 		var timeArr = strings.Split(input, ":")
 
@@ -195,13 +182,14 @@ func (ht *Humantime) parseDatePhrase(input string) (time.Time, error) {
 				return time.Time{}, fmt.Errorf("could not parse weekday: %s in input: %s", resultArr[1], input)
 			}
 
-			if resultArr[0] == "last" {
+			switch resultArr[0] {
+			case "last":
 				timestamp = time.Date(now.Year(), now.Month(), now.Day()-int(now.Weekday()-weekday)-7, 0, 0, 0, 0, ht.Location)
-			} else if resultArr[0] == "this" {
+			case "this":
 				timestamp = time.Date(now.Year(), now.Month(), now.Day()-int(now.Weekday()-weekday), 0, 0, 0, 0, ht.Location)
-			} else if resultArr[0] == "next" {
+			case "next":
 				timestamp = time.Date(now.Year(), now.Month(), now.Day()-int(now.Weekday()-weekday)+7, 0, 0, 0, 0, ht.Location)
-			} else {
+			default:
 				return time.Time{}, fmt.Errorf("could not parse weekday: %s in input: %s", resultArr[1], input)
 			}
 

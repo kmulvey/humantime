@@ -72,7 +72,6 @@ func parseLargeUnits(input string, loc *time.Location) (*time.Time, string, erro
 	}
 	if matched {
 		for i, word := range strings.Fields(input) {
-			//fmt.Printf("i: %d, tempNum: %d, year: %d, month: %d, day: %d, word: %s \n", i, tempNum, year, month, day, word)
 			if i%2 == 0 {
 				tempNum, err = strconv.Atoi(word)
 				if err != nil {
@@ -110,22 +109,13 @@ func parseSmallUnits(input string) (time.Duration, error) {
 		return 0, nil
 	}
 
-	hr, err := regexp.Compile(`hour(s)?`)
-	if err != nil {
-		return 0, err
-	}
+	var hr = regexp.MustCompile(`hour(s)?`)
 	input = hr.ReplaceAllString(input, "h")
 
-	mr, err := regexp.Compile(`minute(s)?`)
-	if err != nil {
-		return 0, err
-	}
+	var mr = regexp.MustCompile(`minute(s)?`)
 	input = mr.ReplaceAllString(input, "m")
 
-	sr, err := regexp.Compile(`second(s)?`)
-	if err != nil {
-		return 0, err
-	}
+	var sr = regexp.MustCompile(`second(s)?`)
 	input = sr.ReplaceAllString(input, "s")
 
 	return time.ParseDuration(strings.ReplaceAll(input, " ", ""))
