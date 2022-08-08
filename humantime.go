@@ -169,7 +169,7 @@ func (ht *Humantime) parseDatePhrase(input string) (time.Time, error) {
 	var now = time.Now().In(ht.Location)
 	var nilTime = time.Time{} // used for if() testing
 	var timestamp time.Time   // this is the return val that we incrementally add to each time through the loop
-	var i int                 // count iterations to prevent infinitly looping
+	var i int                 // count iterations to prevent infinitely looping
 	for inputCopy != "" {
 		if result := ht.WeekdayRegex.FindString(inputCopy); result != "" {
 			var resultArr = strings.Fields(result)

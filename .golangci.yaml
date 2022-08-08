@@ -17,7 +17,14 @@ linters:
     - exportloopref
     - gocritic
     - goconst
+    - gosec
+    - misspell
+    - nilerr
+    - paralleltest
     - prealloc
+    - unparam
+    - usestdlibvars
+    - wastedassign
 linters-settings:
   govet:
     # Report about shadowed variables.
@@ -27,5 +34,6 @@ linters-settings:
     settings:
       # Analyzer name, run `go tool vet help` to see all analyzers.
     disable-all: false
-    enable-all: false
-
+    enable-all: true
+    disable: 
+      - shadow
