@@ -25,10 +25,6 @@ func (v *TimeRange) Get() TimeRange {
 // must end in the format " in [timezone]" e.g. "3pm in America/New_York"
 func (v *TimeRange) Set(s string) error {
 	var inputArr = strings.Fields(s)
-	if len(inputArr) < 3 {
-		return fmt.Errorf("input must have at least three fields: %s", s)
-	}
-
 	var location = time.Local
 	var err error
 	if index := strings.Index(s, " in "); index > -1 {

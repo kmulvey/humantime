@@ -99,9 +99,6 @@ func TestCLI(t *testing.T) {
 	err = result.Set("from 1 to 2 in America/Denver")
 	assert.Equal(t, "error parsingDatePhrase: could not parse 1", err.Error())
 
-	err = result.Set("from ")
-	assert.Equal(t, "input must have at least three fields: from ", err.Error())
-
 	err = result.Set("from 1/1/2001 to 2/2/2002 in America/Denver")
 	assert.NoError(t, err)
 
