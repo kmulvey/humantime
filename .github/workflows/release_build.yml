@@ -29,8 +29,6 @@ jobs:
 
       - name: Govulncheck
         uses: kmulvey/govulncheck-action@main
-        with:
-          package: '.'
 
       - name: Build & Test
         run: |
