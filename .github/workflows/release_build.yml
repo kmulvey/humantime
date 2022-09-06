@@ -27,6 +27,11 @@ jobs:
           version: latest
           args: --timeout=5m
 
+      - name: Govulncheck
+        uses: kmulvey/govulncheck-action@main
+        with:
+          package: '.'
+
       - name: Build & Test
         run: |
           go mod tidy
