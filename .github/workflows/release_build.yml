@@ -35,6 +35,7 @@ jobs:
           go mod tidy
           go test -v -race -count 1 -parallel 5 -covermode=atomic -coverprofile=coverage.out ./...
           go build -v -ldflags="-s -w" ./...
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3  
         with:
