@@ -8,7 +8,7 @@ Convert English strings related to time to Go time.Time. This package also imple
   - at 4pm
   - 3am
   - 12:03:33 // the colon format assumes 24h (no am or pm allowed)
-  - 3:4:3 // interperted as 03:04:03
+  - 3:4:3 // interpreted as 03:04:03
 - A "date phrase" is text that represents a date and optionally time, examples:
   - May 8, 2009 5:57:51 PM
   - 3/15/2022
@@ -21,7 +21,7 @@ Convert English strings related to time to Go time.Time. This package also imple
     - "this" is this week, if today is wednesday and you input "this tuesday" it will return yesterday
     - "next" the following week
   - Day names:
-    - all days of the week are supported as full names: e.g. firday
+    - all days of the week are supported as full names: e.g. friday
     - abbreviations are also supported: mon, tues,wed, thur, fri, sat, sun
 - A complete list of supported date formats can be found [here](https://github.com/araddon/dateparse#extended-example)
   - In addition to this list, "yesterday", "today" and "tomorrow" are also supported

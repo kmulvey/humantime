@@ -11,17 +11,17 @@ import (
 	"github.com/araddon/dateparse"
 )
 
-// String fulfils the flag.Value interface https://pkg.go.dev/flag#Value
+// String fulfills the flag.Value interface https://pkg.go.dev/flag#Value
 func (v TimeRange) String() string {
 	return fmt.Sprintf("From: %s, To: %s", v.From.Format(time.RFC822), v.To.Format(time.RFC822))
 }
 
-// Get fulfils the flag.Getter interface https://pkg.go.dev/flag#Getter
+// Get fulfills the flag.Getter interface https://pkg.go.dev/flag#Getter
 func (v *TimeRange) Get() TimeRange {
 	return *v
 }
 
-// Set fulfils the flag.Value interface https://pkg.go.dev/flag#Value
+// Set fulfills the flag.Value interface https://pkg.go.dev/flag#Value
 // must end in the format " in [timezone]" e.g. "3pm in America/New_York"
 func (v *TimeRange) Set(s string) error {
 	var inputArr = strings.Fields(s)
