@@ -13,7 +13,7 @@ import (
 
 // String fulfills the flag.Value interface https://pkg.go.dev/flag#Value
 func (v TimeRange) String() string {
-	return fmt.Sprintf("From: %s, To: %s", v.From.Format(time.RFC822), v.To.Format(time.RFC822))
+	return fmt.Sprintf("From: %s, To: %s", v.From.Format(time.RFC1123), v.To.Format(time.RFC1123))
 }
 
 // Get fulfills the flag.Getter interface https://pkg.go.dev/flag#Getter
