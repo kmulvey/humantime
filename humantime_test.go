@@ -91,7 +91,7 @@ func TestCLI(t *testing.T) {
 
 	result, err := st.FromTo("from 1/1/2021 to 2/2/2022")
 	assert.NoError(t, err)
-	assert.Equal(t, "From: 01 Jan 21 00:00 UTC, To: 02 Feb 22 00:00 UTC", result.String())
+	assert.Equal(t, "From: Fri, 01 Jan 2021 00:00:00 UTC, To: Wed, 02 Feb 2022 00:00:00 UTC", result.String())
 
 	err = result.Set("from 1/1/2001 to 2/2/2002 in America/NoExist")
 	assert.Equal(t, "unknown time zone America/NoExist", err.Error())
