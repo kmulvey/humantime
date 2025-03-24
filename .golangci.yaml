@@ -13,7 +13,6 @@ linters:
     - containedctx
       #- cyclop
       #- dupl
-    - exportloopref
     - gocritic
     - goconst
     - gosec
@@ -26,7 +25,6 @@ linters:
     - wastedassign
 linters-settings:
   govet:
-    check-shadowing: false
     disable-all: false
     enable-all: true
     disable:
